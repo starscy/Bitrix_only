@@ -1,0 +1,1 @@
+<?php $filesInfo = ["/local/components/MyComponents/news.list/templates/best_offers_template/style.css" => "1683216371150",]; ?>
