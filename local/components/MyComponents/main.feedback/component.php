@@ -13,7 +13,6 @@ if(!defined("B_PROLOG_INCLUDED")||B_PROLOG_INCLUDED!==true)die();
 
 $arResult["PARAMS_HASH"] = md5(serialize($arParams).$this->GetTemplateName());
 
-$arParams["USE_CAPTCHA"] = (($arParams["USE_CAPTCHA"] != "N" && !$USER->IsAuthorized()) ? "Y" : "N");
 $arParams["EVENT_NAME"] = trim($arParams["EVENT_NAME"]);
 if($arParams["EVENT_NAME"] == '')
 	$arParams["EVENT_NAME"] = "FEEDBACK_FORM";
@@ -42,21 +41,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["submit"] <> '' && (!isset($_P
 		}
 		if(mb_strlen($_POST["user_email"]) > 1 && !check_email($_POST["user_email"]))
 			$arResult["ERROR_MESSAGE"][] = GetMessage("MF_EMAIL_NOT_VALID");
-		if($arParams["USE_CAPTCHA"] == "Y")
-		{
-			$captcha_code = $_POST["captcha_sid"];
-			$captcha_word = $_POST["captcha_word"];
-			$cpt = new CCaptcha();
-			$captchaPass = COption::GetOptionString("main", "captcha_password", "");
-			if ($captcha_word <> '' && $captcha_code <> '')
-			{
-				if (!$cpt->CheckCodeCrypt($captcha_word, $captcha_code, $captchaPass))
-					$arResult["ERROR_MESSAGE"][] = GetMessage("MF_CAPTCHA_WRONG");
-			}
-			else
-				$arResult["ERROR_MESSAGE"][] = GetMessage("MF_CAPTHCA_EMPTY");
 
-		}
 		if(empty($arResult["ERROR_MESSAGE"]))
 		{
 			$arFields = Array(
@@ -110,7 +95,5 @@ if(empty($arResult["ERROR_MESSAGE"]))
 	}
 }
 
-if($arParams["USE_CAPTCHA"] == "Y")
-	$arResult["capCode"] =  htmlspecialcharsbx($APPLICATION->CaptchaGetCode());
 
 $this->IncludeComponentTemplate();
