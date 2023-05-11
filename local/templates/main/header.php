@@ -6,6 +6,7 @@ use \Bitrix\Main\Page\Asset;
 $asset = Asset::getInstance();
 
 $asset->addCss(SITE_TEMPLATE_PATH . '/assets/css/common.css' );
+$asset->addCss(SITE_TEMPLATE_PATH . '/assets/css/common_form.css' );
 ?>
 
 <!DOCTYPE html>
