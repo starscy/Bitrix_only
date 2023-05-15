@@ -1,0 +1,6 @@
+<?
+$sSectionName = "Форма";
+$arDirProperties = Array(
+
+);
+?>
