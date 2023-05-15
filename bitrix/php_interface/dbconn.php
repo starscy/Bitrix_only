@@ -18,6 +18,8 @@ define("BX_FILE_PERMISSIONS", 0755);
 define("BX_DIR_PERMISSIONS", 0755);
 @umask(~(BX_FILE_PERMISSIONS | BX_DIR_PERMISSIONS) & 0777);
 
+@ini_set("memory_limit", "512M");
+
 define("BX_DISABLE_INDEX_PAGE", true);
 
 define("BX_UTF", true);

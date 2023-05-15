@@ -46,7 +46,7 @@ return array (
       array (
         'className' => '\\Bitrix\\Main\\DB\\MysqliConnection',
         'host' => 'localhost',
-        'database' => 'may23test',
+        'database' => 'may23_only',
         'login' => 'root',
         'password' => '0885466',
         'options' => 2.0,
@@ -58,7 +58,7 @@ return array (
   array (
     'value' => 
     array (
-      'crypto_key' => '856d73a69c3c6412f39a7da1a3401960',
+      'crypto_key' => 'ad3bfc9e07f3a5b394ae0e2109d8c02a',
     ),
     'readonly' => true,
   ),

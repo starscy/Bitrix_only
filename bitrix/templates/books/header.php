@@ -89,7 +89,22 @@
 );?></div>
         </div>
       
-		<!--SUBSCRIBE-->
+		
+<div class="content-block">
+	<div class="content-block-head">Подписка на рассылку</div>
+		<div class="content-block-body"><?$APPLICATION->IncludeComponent(
+			"bitrix:subscribe.form",
+			".default",
+			Array(
+				"PAGE" => "#SITE_DIR#personal/subscribe/subscr_edit.php",
+				"SHOW_HIDDEN" => "N",
+				"USE_PERSONALIZATION"	=>	"N",
+				"CACHE_TYPE" => "A",
+				"CACHE_TIME" => "3600"
+			)
+			);?>
+	</div>
+</div>
       
         <!--BANNER_LEFT-->
 
