@@ -120,4 +120,12 @@ $arUrlRewrite=array (
     'PATH' => '/form/index.php',
     'SORT' => 100,
   ),
+  15 => 
+  array (
+    'CONDITION' => '#^/#',
+    'RULE' => '',
+    'ID' => 'bitrix:news',
+    'PATH' => '/index.php',
+    'SORT' => 100,
+  ),
 );
