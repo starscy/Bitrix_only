@@ -71,3 +71,75 @@
 2023-05-18 18:24:58 - Ux11 - Ошибка описания модуля "sprint.migration"
 2023-05-18 18:25:33 - Ux11 - Ошибка описания модуля "sprint.migration"
 2023-05-18 18:25:44 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 14:55:46 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 15:26:13 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 15:26:13 -  - exec CUpdateClientPartner::GetUpdatesList
+2023-05-25 15:26:13 -  - exec CUpdateClientPartner::__CollectRequestData
+2023-05-25 15:26:13 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 15:26:13 - NCRD01 - [Ux11] Ошибка описания модуля "sprint.migration". 
+2023-05-25 15:26:13 - GUL01 - Empty query list
+2023-05-25 15:26:13 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 15:26:30 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 15:26:30 -  - exec CUpdateClientPartner::GetUpdatesList
+2023-05-25 15:26:30 -  - exec CUpdateClientPartner::__CollectRequestData
+2023-05-25 15:26:30 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 15:26:30 - NCRD01 - [Ux11] Ошибка описания модуля "sprint.migration". 
+2023-05-25 15:26:30 - GUL01 - Empty query list
+2023-05-25 15:26:30 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 15:26:30 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 15:26:30 -  - exec CUpdateClientPartner::GetUpdatesList
+2023-05-25 15:26:30 -  - exec CUpdateClientPartner::__CollectRequestData
+2023-05-25 15:26:30 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 15:26:30 - NCRD01 - [Ux11] Ошибка описания модуля "sprint.migration". 
+2023-05-25 15:26:30 - GUL01 - Empty query list
+2023-05-25 15:26:30 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 15:26:41 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 15:26:41 -  - exec CUpdateClientPartner::GetUpdatesList
+2023-05-25 15:26:41 -  - exec CUpdateClientPartner::__CollectRequestData
+2023-05-25 15:26:41 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 15:26:41 - NCRD01 - [Ux11] Ошибка описания модуля "sprint.migration". 
+2023-05-25 15:26:41 - GUL01 - Empty query list
+2023-05-25 15:26:41 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 15:38:02 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 15:38:02 -  - exec CUpdateClientPartner::GetUpdatesList
+2023-05-25 15:38:02 -  - exec CUpdateClientPartner::__CollectRequestData
+2023-05-25 15:38:02 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 15:38:02 - NCRD01 - [Ux11] Ошибка описания модуля "sprint.migration". 
+2023-05-25 15:38:02 - GUL01 - Empty query list
+2023-05-25 15:38:02 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 15:38:32 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 15:38:32 -  - exec CUpdateClientPartner::GetUpdatesList
+2023-05-25 15:38:32 -  - exec CUpdateClientPartner::__CollectRequestData
+2023-05-25 15:38:32 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 15:38:32 - NCRD01 - [Ux11] Ошибка описания модуля "sprint.migration". 
+2023-05-25 15:38:32 - GUL01 - Empty query list
+2023-05-25 15:38:32 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 16:28:28 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 16:28:28 -  - exec CUpdateClientPartner::GetUpdatesList
+2023-05-25 16:28:28 -  - exec CUpdateClientPartner::__CollectRequestData
+2023-05-25 16:28:28 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 16:28:28 - NCRD01 - [Ux11] Ошибка описания модуля "sprint.migration". 
+2023-05-25 16:28:28 - GUL01 - Empty query list
+2023-05-25 16:28:28 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 16:28:35 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 16:28:37 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 16:28:37 -  - exec CUpdateClientPartner::GetUpdatesList
+2023-05-25 16:28:37 -  - exec CUpdateClientPartner::__CollectRequestData
+2023-05-25 16:28:37 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 16:28:37 - NCRD01 - [Ux11] Ошибка описания модуля "sprint.migration". 
+2023-05-25 16:28:37 - GUL01 - Empty query list
+2023-05-25 16:28:37 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 18:45:51 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 18:45:51 -  - exec CUpdateClientPartner::GetUpdatesList
+2023-05-25 18:45:51 -  - exec CUpdateClientPartner::__CollectRequestData
+2023-05-25 18:45:51 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 18:45:51 - NCRD01 - [Ux11] Ошибка описания модуля "sprint.migration". 
+2023-05-25 18:45:51 - GUL01 - Empty query list
+2023-05-25 18:45:51 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 18:51:18 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 18:51:18 -  - exec CUpdateClientPartner::GetUpdatesList
+2023-05-25 18:51:18 -  - exec CUpdateClientPartner::__CollectRequestData
+2023-05-25 18:51:18 - Ux11 - Ошибка описания модуля "sprint.migration"
+2023-05-25 18:51:18 - NCRD01 - [Ux11] Ошибка описания модуля "sprint.migration". 
+2023-05-25 18:51:18 - GUL01 - Empty query list
+2023-05-25 18:51:18 - Ux11 - Ошибка описания модуля "sprint.migration"
