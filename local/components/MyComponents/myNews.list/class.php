@@ -112,7 +112,6 @@ class MyNewsList extends \CBitrixComponent implements Errorable
                 "IBLOCK_TYPE" => $this->arParams['IBLOCK_TYPE'],
                 "IBLOCK_ID" => $this->arResult['ID'],
                 "ACTIVE" => "Y",
-               // 'PROPERTY_SEX' => "m",
             ]);
 
             //order
@@ -140,21 +139,6 @@ class MyNewsList extends \CBitrixComponent implements Errorable
             $this->SetResultCacheKeys([]);
             $this->IncludeComponentTemplate();
 
-//            $rsElementProps = \CIBlockElement::GetList($arSort, $arFilter, false, false, $arSelect);
-//
-//            $bGetProperty = !empty($this->arParams["PROPERTY_CODE"]);
-//            if ($bGetProperty) {
-//                foreach ($this->arResult["ITEMS"] as &$arBlock) {
-//                    foreach ($arBlock as &$arItem) {
-//                        if ($row = $rsElementProps->GetNextElement()) {
-//                            $props = $row->GetProperties();
-//                            $fields = $row->GetFields();
-//                            $arItem['DISPLAY_PROPERTIES'] = $props;
-//                            $arItem['FIELDS'] = $fields;
-//                        }
-//                    }
-//                }
-//            }
         }
     }
 }

@@ -1,8 +1,6 @@
 <?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 ?>
-<pre>
-    <?php print_r($arResult);?>
-</pre>
+
 <?php if (!empty($arResult['ITEMS'])) :?>
     <?php foreach ($arResult['ITEMS'] as $arIblock) :?>
         <?php foreach ($arIblock as $arItem) :?>
