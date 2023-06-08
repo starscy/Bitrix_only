@@ -66,7 +66,6 @@ class CIBlockPropertyCProp
                 $result .= self::showBindElement($code, $arItem['TITLE'], $value, $strHTMLControlName);
             }
             else if($arItem['TYPE'] === 'html'){
-             //   $result .= self::showHTMLElement($code, $arItem['TITLE'], $value, $strHTMLControlName);
                 ob_start();
                 ?><input type="hidden" name="<?=$strHTMLControlName["VALUE"]?>" value=""><?php
 
@@ -210,9 +209,6 @@ class CIBlockPropertyCProp
             if($arFields[$code]['TYPE'] === 'file'){
                 $arValue['VALUE'][$code] = self::prepareFileToDB($value);
             }
-//            if($arFields[$code]['TYPE'] === 'html'){
-//                $arValue['VALUE'][$code] = self::prepareFileToDB($value);
-//            }
         }
 
         $isEmpty = true;
@@ -249,53 +245,6 @@ class CIBlockPropertyCProp
     }
 
     //Internals
-
-
-
-    private static function showHTMLElement22(int $code, string $title,array $arValue,array $strHTMLControlName):string
-    {
-        $result = '';
-
-        $v = !empty($arValue['VALUE'][$code]) ? $arValue['VALUE'][$code] : '';
-        $result .= '<tr>
-                    <td align="right">'.$title.': </td>
-                    <td><input type="hidden" value="'.$v.'" name="'.$strHTMLControlName['VALUE'].'['.$code.']"/></td>
-                </tr>';
-
-
-//        Bitrix\Main\Loader::includeModule("sale");
-
-        $v = !empty($arValue['VALUE'][$code]) ? $arValue['VALUE'][$code] : '';
-
-//        $result .= '<tr>
-//                    <td align="right" valign="top">'.$title.': </td>
-//                    <td><input rows="1" name="'.$strHTMLControlName['VALUE'].'['.$code.']">'.$v.'</input></td>
-//                </tr>';
-
-         $result .= '<tr> 
-                        <td>';
-
-                ob_start();
-        CFileMan::AddHTMLEditorFrame(
-            $strHTMLControlName['VALUE'].'['.$code.']"',
-            $v,
-            "html",
-            "html",
-            440,
-            "N",
-            0,
-            "",
-            "",
-            's1'
-        );
-        $result .= ob_get_clean();
-
-         $result .=  '</td></tr>';
-
-
-
-        return $result;
-    }
 
     private static function showString($code, $title, $arValue, $strHTMLControlName)
     {
