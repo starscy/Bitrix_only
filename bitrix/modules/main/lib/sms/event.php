@@ -77,31 +77,6 @@ class Event
 			return $result;
 		}
 
-		$context = Main\Context::getCurrent();
-
-		if($this->siteId === null)
-		{
-			$this->siteId = $context->getSite();
-			if($this->siteId === null)
-			{
-				$result->addError(new Main\Error("Can't filter templates, the siteId is not set.", self::ERR_SITE));
-				return $result;
-			}
-		}
-
-		if($this->languageId === null)
-		{
-			$this->languageId = $context->getLanguage();
-		}
-
-		$templates = $this->fetchTemplates();
-
-		if(count($templates) == 0)
-		{
-			$result->addError(new Main\Error("Templates not found.", self::ERR_TEMPLATES));
-			return $result;
-		}
-
 		$senderId = Main\Config\Option::get("main", "sms_default_service");
 		if($senderId == '')
 		{
@@ -109,10 +84,15 @@ class Event
 			$senderId = null;
 		}
 
-		foreach($templates as $template)
+		$messageListResult = $this->createMessageList();
+		if (!$messageListResult->isSuccess())
 		{
-			$message = Message::createFromTemplate($template, $this->fields);
+			return $result->addErrors($messageListResult->getErrors());
+		}
+		$messageList = $messageListResult->getData();
 
+		foreach($messageList as $message)
+		{
 			$smsMessage = \Bitrix\MessageService\Sender\SmsManager::createMessage([
 				'SENDER_ID' => $senderId,
 				'MESSAGE_FROM' => $message->getSender(),
@@ -120,7 +100,10 @@ class Event
 				'MESSAGE_BODY' => $message->getText(),
 			]);
 
-			$event = new Main\Event("main", "onBeforeSendSms", ['message' => $smsMessage, "template" => $template]);
+			$event = new Main\Event('main', 'onBeforeSendSms', [
+				'message' => $smsMessage,
+				'template' => $message->getTemplate()
+			]);
 			$event->send();
 			foreach($event->getResults() as $evenResult)
 			{
@@ -144,6 +127,47 @@ class Event
 				$result->addErrors($smsResult->getErrors());
 			}
 		}
+
+		return $result;
+	}
+
+	/**
+	 * @return Main\Result<int, Message>
+	 */
+	public function createMessageList(): Main\Result
+	{
+		$result = new Main\Result();
+		$context = Main\Context::getCurrent();
+
+		if($this->siteId === null)
+		{
+			$this->siteId = $context->getSite();
+			if($this->siteId === null)
+			{
+				$result->addError(new Main\Error("Can't filter templates, the siteId is not set.", self::ERR_SITE));
+				return $result;
+			}
+		}
+
+		if($this->languageId === null)
+		{
+			$this->languageId = $context->getLanguage();
+		}
+
+		$templates = $this->fetchTemplates();
+
+		if(empty($templates))
+		{
+			$result->addError(new Main\Error("Templates not found.", self::ERR_TEMPLATES));
+			return $result;
+		}
+
+		$messageList = [];
+		foreach($templates as $template)
+		{
+			$messageList[] = Message::createFromTemplate($template, $this->fields);
+		}
+		$result->setData($messageList);
 
 		return $result;
 	}

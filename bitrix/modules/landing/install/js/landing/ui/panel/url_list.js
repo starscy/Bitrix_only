@@ -21,6 +21,7 @@
 	var TYPE_SYSTEM = "system";
 	var TYPE_CRM_FORM = "crmFormPopup";
 	var TYPE_CRM_PHONE = "crmPhone";
+	var TYPE_USER = "user";
 
 	var SidebarButton = BX.Landing.UI.Button.SidebarButton;
 
@@ -49,7 +50,18 @@
  		onCustomEvent("BX.Landing.Block:remove", this.refresh.bind(this));
 
 		// Append panel
-		append(this.layout, document.body);
+		if (BX.Landing.Main.isEditorMode())
+		{
+			append(this.layout, window.parent.document.body);
+		}
+		else
+		{
+			this.overlay.parentNode.removeChild(this.overlay);
+			document.body.appendChild(this.overlay);
+			append(this.layout, document.body);
+			this.layout.style.marginTop = 0;
+			this.overlay.style.marginTop = 0;
+		}
 
 		// Make loader
 		this.loader = new BX.Loader({target: this.content});
@@ -142,6 +154,10 @@
 				setTextContent(this.title, options.panelTitle || BX.Landing.Loc.getMessage("LANDING_LINKS_CRM_PHONES_TITLE"));
 				this.showPhones(options);
 			}
+			else if (view === TYPE_USER)
+			{
+				setTextContent(this.title, options.panelTitle || BX.Landing.Loc.getMessage("LANDING_LINKS_CRM_PHONES_USERS"));
+			}
 
 			return new Promise(function(resolve) {
 				this.promiseResolve = resolve;
@@ -154,7 +170,7 @@
 		 */
 		showSites: function(options)
 		{
-			var currentSiteId = options.siteId;
+			let currentSiteId = options.siteId;
 
 			void style(this.layout, {
 				width: null
@@ -179,33 +195,54 @@
 			options.filter.SPECIAL = 'N';
 
 			void BX.Landing.Backend.getInstance()
-				.getSites(options).then(function(sites) {
-					this.appendSidebarButton(
-						new SidebarButton("current_site", {
-							text: BX.Landing.Loc.getMessage("LANDING_LINKS_PANEL_CURRENT_SITE")
-						})
-					);
-
-					sites.forEach(function(site) {
+				.getSites(options).then(sites => {
+					sites.forEach(site => {
 						// noinspection EqualityComparisonWithCoercionJS
 						if (parseInt(site.ID) == currentSiteId)
 						{
+							this.appendSidebarButton(this.createCurrentSiteButton());
+
 							this.currentSiteButton = new SidebarButton(site.ID, {
 								text: site.TITLE,
 								onClick: !options.currentSiteOnly ? this.onSiteClick.bind(this, site.ID, options.enableAreas) : null,
 								child: true,
-								active: true
+								active: true,
 							});
-
 							this.appendSidebarButton(this.currentSiteButton);
 						}
-					}, this);
+					});
+
+					if (!options.currentSiteOnly)
+					{
+						this.appendSidebarButton(
+							new SidebarButton("my_sites", {
+								text: BX.Landing.Loc.getMessage("LANDING_LINKS_PANEL_MY_SITES")
+							})
+						);
+
+						sites.forEach(site => {
+							const button = new SidebarButton(site.ID, {
+								text: site.TITLE,
+								onClick: this.onSiteClick.bind(this, site.ID, options.enableAreas),
+								child: true,
+								active: !this.currentSiteButton,
+							});
+							// get first site if current not in list
+							if (!this.currentSiteButton)
+							{
+								this.currentSiteButton = button;
+								currentSiteId = site.ID;
+							}
+
+							this.appendSidebarButton(button);
+						});
+					}
 
 					BX.Landing.Backend.getInstance()
 						.getLandings({siteId: currentSiteId}, options.filterLanding)
-						.then(function(landings) {
-							var fakeEvent = {currentTarget: this.currentSiteButton.layout};
-							var siteClick = this.onSiteClick.bind(this, currentSiteId, options.enableAreas, fakeEvent);
+						.then(landings => {
+							const fakeEvent = {currentTarget: this.currentSiteButton.layout};
+							const siteClick = this.onSiteClick.bind(this, currentSiteId, options.enableAreas, fakeEvent);
 							if (!options.disableAddPage)
 							{
 								this.appendCard(
@@ -215,7 +252,7 @@
 									})
 								);
 							}
-							landings.forEach(function(landing) {
+							landings.forEach(landing => {
 								if (!landing.IS_AREA || (landing.IS_AREA && options.enableAreas))
 								{
 									this.appendCard(
@@ -227,30 +264,11 @@
 										})
 									);
 								}
-							}, this);
+							});
 
 							this.loader.hide();
-						}.bind(this));
-
-					if (!options.currentSiteOnly)
-					{
-						this.appendSidebarButton(
-							new SidebarButton("my_sites", {
-								text: BX.Landing.Loc.getMessage("LANDING_LINKS_PANEL_MY_SITES")
-							})
-						);
-
-						sites.forEach(function(site) {
-							this.appendSidebarButton(
-								new SidebarButton(site.ID, {
-									text: site.TITLE,
-									onClick: this.onSiteClick.bind(this, site.ID, options.enableAreas),
-									child: true
-								})
-							);
-						}, this);
-					}
-				}.bind(this));
+						});
+				});
 		},
 
 		/**
@@ -292,11 +310,7 @@
 			BX.Landing.Backend.getInstance()
 				.getSites(options)
 				.then(function(sites) {
-					this.appendSidebarButton(
-						this.createCurrentSiteButton()
-					);
-
-					var sitesIds = sites.map(function(site) {
+					const sitesIds = sites.map(function(site) {
 						return site.ID;
 					}, this);
 
@@ -304,8 +318,8 @@
 						.getLandings({siteId: sitesIds})
 						.then(function(landings) {
 							return sites.reduce(function(result, site, index) {
-								var currentLandings = landings.filter(function(landing) {
-									return site.ID === landing.SITE_ID;
+								const currentLandings = landings.filter(function(landing) {
+									return site.ID === landing.SITE_ID && !landing.IS_AREA;
 								});
 
 								result[site.ID] = {site: site, landings: currentLandings};
@@ -314,21 +328,29 @@
 						})
 				}.bind(this))
 				.then(function(result) {
-					result[currentSiteId].landings.forEach(function(landing) {
-						var active = parseInt(landing.ID) === parseInt(currentLandingId);
+					let activeButton = null;
+					if (result[currentSiteId])
+					{
+						this.appendSidebarButton(
+							this.createCurrentSiteButton()
+						);
 
-						if (!options.currentPageOnly || active)
+						result[currentSiteId].landings.forEach(function (landing)
 						{
-							var button = this.createLandingSidebarButton(landing, active);
-							this.appendSidebarButton(button);
+							const isActive = parseInt(landing.ID) === parseInt(currentLandingId);
 
-							if (active)
+							if (!options.currentPageOnly || isActive)
 							{
-								button.layout.click();
+								const button = this.createLandingSidebarButton(landing, isActive);
+								this.appendSidebarButton(button);
+								if (isActive)
+								{
+									activeButton = button;
+								}
 							}
-						}
 
-					}, this);
+						}, this);
+					}
 
 					if (!options.currentPageOnly)
 					{
@@ -341,12 +363,20 @@
 								);
 
 								result[siteId].landings.forEach(function(landing) {
-									this.appendSidebarButton(
-										this.createLandingSidebarButton(landing)
-									);
+									const button = this.createLandingSidebarButton(landing);
+									this.appendSidebarButton(button);
+									if (!activeButton)
+									{
+										activeButton = button;
+									}
 								}, this)
 							}
 						}, this);
+					}
+
+					if (activeButton)
+					{
+						activeButton.layout.click();
 					}
 				}.bind(this));
 		},
@@ -491,8 +521,9 @@
 						this.previewFrame.onload = function() {
 							var contentDocument = this.previewFrame.contentDocument;
 							BX.Landing.Utils.removePanels(contentDocument);
-							[].slice.call(contentDocument.querySelectorAll(".block-wrapper"))
+							[].slice.call(contentDocument.querySelectorAll(".landing-main .block-wrapper"))
 								.forEach(function(wrapper) {
+									wrapper.setAttribute("data-selectable", 1);
 									wrapper.classList.add("landing-ui-block-selectable-overlay");
 									wrapper.addEventListener("click", function(event) {
 										event.preventDefault();
@@ -500,6 +531,17 @@
 										var landingId = BX.Dom.attr(mainNode, 'data-landing');
 										this.onBlockClick(parseInt(wrapper.id.replace("block", "")), event, landingId);
 									}.bind(this));
+								}, this);
+							[].slice.call(contentDocument.querySelectorAll(".block-wrapper"))
+								.forEach(function(wrapper) {
+									if (!wrapper.getAttribute("data-selectable"))
+									{
+										wrapper.style.display = "none";
+									}
+								}, this);
+							[].slice.call(contentDocument.querySelectorAll(".landing-empty"))
+								.forEach(function(wrapper) {
+									wrapper.style.display = "none";
 								}, this);
 							resolve(this.previewFrame);
 						}.bind(this);

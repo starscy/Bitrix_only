@@ -9,6 +9,7 @@ import {DesignerBlockUI} from './ui/designerblock';
 import {RepoElementType} from './ui/panels/repo';
 import {RepoManager} from './panels/repo';
 
+import 'ui.fonts.opensans';
 import './designerblock.css';
 
 type ManifestNodesItem = {
@@ -96,13 +97,16 @@ export class DesignerBlock
 			|| top.document.getElementById('landing-design-block-save')
 			|| document.getElementById('landing-design-block-save');
 
-		this.preventEvents();
-		this.initHistoryEvents();
-		this.initTopPanel();
-		this.initNodes();
-		this.initGrid();
-		this.initSliders();
-		this.initHoverArea();
+		BX.addCustomEvent('Landing.Editor:load', () => {
+			this.preventEvents();
+			// todo: force reinit history instance with D type
+			this.initHistoryEvents();
+			this.initTopPanel();
+			this.initNodes();
+			this.initGrid();
+			this.initSliders();
+			this.initHoverArea();
+		});
 	}
 
 	clearHtml(content: string): string
@@ -135,6 +139,15 @@ export class DesignerBlock
 
 	initHistoryEvents()
 	{
+		BX.Landing.History.getInstance()
+			.setTypeDesignerBlock(this.blockId)
+			.then(() => {
+				return Backend.getInstance()
+					.action("History::clearDesignerBlock", {
+						blockId: this.blockId,
+					});
+			});
+
 		const body = this.getDocumentBody();
 
 		top.BX.addCustomEvent('Landing:onHistoryAddNode',
@@ -190,7 +203,7 @@ export class DesignerBlock
 	initTopPanel()
 	{
 		Event.bind(this.saveButton, 'click', () => {
-			this.highlight.hide();
+			this.highlight.hide(true);
 
 			const finishCallback = () => {
 				if (BX.SidePanel && BX.SidePanel.Instance)
@@ -230,6 +243,12 @@ export class DesignerBlock
 					}
 				};
 			}
+			batch['History::clearDesignerBlock'] = {
+				action: 'History::clearDesignerBlock',
+				data: {
+					blockId: this.blockId,
+				}
+			};
 
 			Backend.getInstance()
 				.batch('Block::updateContent', batch)
@@ -471,14 +490,17 @@ export class DesignerBlock
 		this.refreshManifest(repoElement.manifest.nodes);
 		this.highlight.show(null);
 
-		BX.Landing.History.getInstance().push(
-			new BX.Landing.History.Entry({
-				command: 'addNode',
-				block: null,
-				undo: null,
-				redo: { tags }
+		Backend.getInstance()
+			.action("History::pushDesignerBlock", {
+				blockId: this.blockId,
+				action: 'ADD_NODE',
+				data: {
+					tags: tags,
+				},
 			})
-		);
+			.then(result => {
+				BX.Landing.History.getInstance().push();
+			});
 	}
 
 	removeElement()
@@ -510,15 +532,18 @@ export class DesignerBlock
 			this.changed = true;
 			this.refreshManifest();
 
-			BX.Landing.History.getInstance().push(
-				new BX.Landing.History.Entry({
-					selector: this.activeNode.getOriginalSelector(),
-					command: 'removeNode',
-					block: null,
-					undo: { tags },
-					redo: null
+			Backend.getInstance()
+				.action("History::pushDesignerBlock", {
+					blockId: this.blockId,
+					action: 'REMOVE_NODE',
+					data: {
+						selector: this.activeNode.getOriginalSelector(),
+						tags: tags,
+					},
 				})
-			);
+				.then(result => {
+					BX.Landing.History.getInstance().push();
+				});
 
 		}, 0);
 	}

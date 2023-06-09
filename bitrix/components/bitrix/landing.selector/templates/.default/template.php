@@ -13,7 +13,8 @@ Loc::loadLanguageFile(__FILE__);
 
 \Bitrix\Main\UI\Extension::load([
 	'ui.entity-selector',
-	'ui.hint'
+	'ui.hint',
+	'ui.fonts.opensans',
 ]);
 
 $currentLanding = $arResult['LANDINGS'][$arParams['LANDING_ID']] ?? null;
@@ -42,6 +43,7 @@ $currentLanding = $arResult['LANDINGS'][$arParams['LANDING_ID']] ?? null;
 			landingId: <?= $arParams['LANDING_ID']?>,
 			urlLandingAdd: '<?= $arParams['PAGE_URL_LANDING_ADD']?>',
 			urlFolderAdd: '<?= $arParams['PAGE_URL_FOLDER_ADD']?>',
+			urlFormAdd: '<?= $arParams['PAGE_URL_FORM_ADD']?>',
 			items: [
 				<?foreach ($arResult['FOLDERS'] as $folder):?>
 				{
@@ -64,7 +66,7 @@ $currentLanding = $arResult['LANDINGS'][$arParams['LANDING_ID']] ?? null;
 					entityType: 'landing',
 					title: '<?= \CUtil::jsEscape($landing->getTitle())?>',
 					avatar: '<?= \CUtil::jsEscape($landing->getAvatar())?>',
-					supertitle: '<?= Loc::getMessage('LANDING_SELECTOR_TYPE_PAGE')?>',
+					supertitle: '<?= $arParams['PAGE_URL_FORM_ADD'] ? Loc::getMessage('LANDING_SELECTOR_TYPE_FORM') : Loc::getMessage('LANDING_SELECTOR_TYPE_PAGE')?>',
 					tabs: 'recents'
 				},
 				<?endforeach;?>

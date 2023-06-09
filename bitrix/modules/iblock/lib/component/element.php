@@ -594,6 +594,7 @@ abstract class Element extends Base
 					if (
 						($isArr && !empty($prop['VALUE']))
 						|| (!$isArr && (string)$prop['VALUE'] !== '')
+						|| Tools::isCheckboxProperty($prop)
 					)
 					{
 						$element['DISPLAY_PROPERTIES'][$pid] = \CIBlockFormatProperties::GetDisplayValue($element, $prop, 'catalog_out');
@@ -799,18 +800,22 @@ abstract class Element extends Base
 			$this->arResult['META_TAGS'] = array();
 			$resultCacheKeys[] = 'META_TAGS';
 
+			$elementTitle = $this->arResult['NAME'];
+			if (
+				isset($this->arResult['IPROPERTY_VALUES']['ELEMENT_PAGE_TITLE'])
+				&& $this->arResult['IPROPERTY_VALUES']['ELEMENT_PAGE_TITLE'] !== ''
+			)
+			{
+				$elementTitle = $this->arResult['IPROPERTY_VALUES']['ELEMENT_PAGE_TITLE'];
+			}
 			if ($this->arParams['SET_TITLE'])
 			{
-				$this->arResult['META_TAGS']['TITLE'] = $this->arResult['IPROPERTY_VALUES']['ELEMENT_PAGE_TITLE'] != ''
-					? $this->arResult['IPROPERTY_VALUES']['ELEMENT_PAGE_TITLE']
-					: $this->arResult['NAME'];
+				$this->arResult['META_TAGS']['TITLE'] = $elementTitle;
 			}
 
 			if ($this->arParams['ADD_ELEMENT_CHAIN'])
 			{
-				$this->arResult['META_TAGS']['ELEMENT_CHAIN'] = $this->arResult['IPROPERTY_VALUES']['ELEMENT_PAGE_TITLE'] != ''
-					? $this->arResult['IPROPERTY_VALUES']['ELEMENT_PAGE_TITLE']
-					: $this->arResult['NAME'];
+				$this->arResult['META_TAGS']['ELEMENT_CHAIN'] = $elementTitle;
 			}
 
 			if ($this->arParams['SET_BROWSER_TITLE'] === 'Y')
@@ -917,11 +922,15 @@ abstract class Element extends Base
 
 				if ($this->arParams['SET_TITLE'] || isset($arResult[$this->arParams['BROWSER_TITLE']]))
 				{
-					$this->storage['TITLE_OPTIONS'] = array(
-						'ADMIN_EDIT_LINK' => $buttons['submenu']['edit_element']['ACTION'],
-						'PUBLIC_EDIT_LINK' => $buttons['edit']['edit_element']['ACTION'],
-						'COMPONENT_NAME' => $this->getName(),
-					);
+					$this->storage['TITLE_OPTIONS'] = null;
+					if (isset($buttons['submenu']['edit_element']))
+					{
+						$this->storage['TITLE_OPTIONS'] = [
+							'ADMIN_EDIT_LINK' => $buttons['submenu']['edit_element']['ACTION'],
+							'PUBLIC_EDIT_LINK' => $buttons['edit']['edit_element']['ACTION'],
+							'COMPONENT_NAME' => $this->getName(),
+						];
+					}
 				}
 			}
 		}
@@ -988,7 +997,7 @@ abstract class Element extends Base
 		{
 			foreach ($arResult['SECTION']['PATH'] as $path)
 			{
-				if ($path['IPROPERTY_VALUES']['SECTION_PAGE_TITLE'] != '')
+				if (isset($path['IPROPERTY_VALUES']['SECTION_PAGE_TITLE']) && $path['IPROPERTY_VALUES']['SECTION_PAGE_TITLE'] !== '')
 				{
 					$APPLICATION->AddChainItem($path['IPROPERTY_VALUES']['SECTION_PAGE_TITLE'], $path['~SECTION_PAGE_URL']);
 				}
@@ -1147,6 +1156,11 @@ abstract class Element extends Base
 		if (!empty($params['LABEL_PROP_MOBILE']))
 		{
 			$params['LABEL_PROP_MOBILE'] = array_flip($params['LABEL_PROP_MOBILE']);
+		}
+		$params['ENLARGE_PROP'] = isset($params['ENLARGE_PROP']) ? trim($params['ENLARGE_PROP']) : '';
+		if ($params['ENLARGE_PROP'] === '-')
+		{
+			$params['ENLARGE_PROP'] = '';
 		}
 
 		$params['OFFER_ADD_PICT_PROP'] = isset($params['OFFER_ADD_PICT_PROP']) ? trim($params['OFFER_ADD_PICT_PROP']) : '';
@@ -1346,6 +1360,8 @@ abstract class Element extends Base
 		$matrix = [];
 		$intSelected = -1;
 
+		$offerText = $this->arParams['SHOW_SKU_DESCRIPTION'] === 'Y';
+
 		foreach ($item['OFFERS'] as $keyOffer => $offer)
 		{
 			if ($item['OFFER_ID_SELECTED'] > 0)
@@ -1394,13 +1410,13 @@ abstract class Element extends Base
 			$oneRow = [
 				'ID' => $offer['ID'],
 				'CODE' => $offer['CODE'],
-				'NAME' => $offer['~NAME'],
+				'NAME' => $offer['~NAME'] ?? $item['~NAME'],
 				'TREE' => $offer['TREE'],
 				'DISPLAY_PROPERTIES' => $skuProps,
-				'PREVIEW_TEXT' => $offer['PREVIEW_TEXT'],
-				'PREVIEW_TEXT_TYPE' => $offer['PREVIEW_TEXT_TYPE'],
-				'DETAIL_TEXT' => $offer['DETAIL_TEXT'],
-				'DETAIL_TEXT_TYPE' => $offer['DETAIL_TEXT_TYPE'],
+				'PREVIEW_TEXT' => $offerText ? $offer['PREVIEW_TEXT'] : '',
+				'PREVIEW_TEXT_TYPE' => $offerText ? $offer['PREVIEW_TEXT_TYPE'] : '',
+				'DETAIL_TEXT' => $offerText ? $offer['DETAIL_TEXT'] : '',
+				'DETAIL_TEXT_TYPE' => $offerText ? $offer['DETAIL_TEXT_TYPE'] : '',
 				'ITEM_PRICE_MODE' => $offer['ITEM_PRICE_MODE'],
 				'ITEM_PRICES' => $offer['ITEM_PRICES'],
 				'ITEM_PRICE_SELECTED' => $offer['ITEM_PRICE_SELECTED'],
@@ -1495,6 +1511,7 @@ abstract class Element extends Base
 		$this->editTemplateProductSlider($item, $item['IBLOCK_ID'], 0, $this->arParams['ADD_DETAIL_TO_SLIDER'] === 'Y', array($this->arResult['DEFAULT_PICTURE']));
 		$this->editTemplateCatalogInfo($item);
 
+		$item['SHOW_OFFERS_PROPS'] = false;
 		if ($item['CATALOG'] && !empty($item['OFFERS']))
 		{
 			$needValues = array();
@@ -1532,10 +1549,16 @@ abstract class Element extends Base
 
 		if ($item['MODULES']['catalog'] && $item['CATALOG'])
 		{
-			if ($item['CATALOG_TYPE'] == Catalog\ProductTable::TYPE_PRODUCT || $item['CATALOG_TYPE'] == Catalog\ProductTable::TYPE_SET)
+			if (
+				$item['CATALOG_TYPE'] == Catalog\ProductTable::TYPE_PRODUCT
+				|| $item['CATALOG_TYPE'] == Catalog\ProductTable::TYPE_SET
+			)
 			{
-				\CIBlockPriceTools::setRatioMinPrice($item, false);
-				$item['MIN_BASIS_PRICE'] = $item['MIN_PRICE'];
+				if (isset($item['MIN_PRICE']))
+				{
+					\CIBlockPriceTools::setRatioMinPrice($item, false);
+					$item['MIN_BASIS_PRICE'] = $item['MIN_PRICE'];
+				}
 			}
 
 			if (

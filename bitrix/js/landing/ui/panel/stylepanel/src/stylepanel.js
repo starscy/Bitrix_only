@@ -3,6 +3,8 @@ import {Loader} from 'main.loader';
 import {Content} from 'landing.ui.panel.content';
 import {Loc} from 'landing.loc';
 import {PageObject} from 'landing.pageobject';
+
+import 'ui.fonts.opensans';
 import './css/style.css';
 
 const showPseudoContent = Symbol('showPseudoContent');
@@ -31,6 +33,7 @@ export class StylePanel extends Content
 		this.lsCache = new Cache.LocalStorageCache();
 		this.cache = new Cache.MemoryCache();
 		this.switcher = this.getSwitcher();
+		this.closeByEsc = false;
 
 		Dom.addClass(this.layout, 'landing-ui-panel-style');
 		Dom.addClass(this.overlay, 'landing-ui-panel-style-overlay');
@@ -115,10 +118,33 @@ export class StylePanel extends Content
 		Dom.style(document.body, 'pointer-events', 'none');
 	}
 
-	show(): Promise<StylePanel>
+	show(formMode): Promise<StylePanel>
 	{
 		this[showPseudoContent]();
 		StylePanel[disableEditorPointerEvents]();
+
+		if (formMode)
+		{
+			if (!Dom.hasClass(this.layout, 'landing-ui-style-form-mode'))
+			{
+				Dom.addClass(this.layout, 'landing-ui-style-form-mode');
+
+				/*Dom.style(this.overlay, {
+					'z-index': 9998,
+					width: '880px',
+				});*/
+				Dom.insertAfter(this.overlay, this.layout);
+				Dom.removeClass(this.overlay, 'landing-ui-panel-style-overlay');
+			}
+		}
+		else
+		{
+			//Dom.remove(this.overlay);
+			Dom.addClass(this.overlay, 'landing-ui-panel-style-overlay');
+			Dom.removeClass(this.layout, 'landing-ui-style-form-mode');
+		}
+
+		Dom.remove(this.overlay);
 
 		return super.show()
 			.then(() => {
@@ -129,8 +155,11 @@ export class StylePanel extends Content
 					StylePanel[enableEditorPointerEvents]();
 				}, 300);
 
-				Dom.style(this.getViewWrapper(), 'width', 'calc(100% - 320px)');
-				Dom.addClass(document.body, 'landing-ui-collapsed');
+				if (!formMode)
+				{
+					Dom.style(this.getViewWrapper(), 'max-width', 'calc(100% - 320px)');
+					Dom.addClass(document.body, 'landing-ui-collapsed');
+				}
 
 				BX.onCustomEvent('BX.Landing.Style:enable', []);
 				this.emit('enable', {panel: this});
@@ -142,7 +171,7 @@ export class StylePanel extends Content
 	hide(): Promise<StylePanel>
 	{
 		StylePanel[disableEditorPointerEvents]();
-		Dom.style(this.getViewWrapper(), 'width', null);
+		Dom.style(this.getViewWrapper(), 'max-width', null);
 
 		return super.hide()
 			.then(() => {
@@ -154,5 +183,19 @@ export class StylePanel extends Content
 
 				return this;
 			});
+	}
+
+	prepareFooter(isMultiSelector = true)
+	{
+		if (isMultiSelector)
+		{
+			this.footer.hidden = false;
+			Dom.removeClass(this.body, 'landing-ui-panel-content-body_long');
+		}
+		else
+		{
+			this.footer.hidden = true;
+			Dom.addClass(this.body, 'landing-ui-panel-content-body_long');
+		}
 	}
 }

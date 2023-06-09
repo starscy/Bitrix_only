@@ -50,13 +50,13 @@ class CSocServOdnoklassniki extends CSocServAuth
 		{
 			$redirect_uri = self::CONTROLLER_URL."/redirect.php";
 			$state = \CHTTP::URN2URI("/bitrix/tools/oauth/odnoklassniki.php")."?state=";
-			$backurl = urlencode($GLOBALS["APPLICATION"]->GetCurPageParam('check_key='.$_SESSION["UNIQUE_KEY"], array("logout", "auth_service_error", "auth_service_id", "backurl"))).'&mode='.$location;
+			$backurl = urlencode($GLOBALS["APPLICATION"]->GetCurPageParam('check_key='.\CSocServAuthManager::getUniqueKey(), array("logout", "auth_service_error", "auth_service_id", "backurl"))).'&mode='.$location;
 			$state .= urlencode(urlencode("backurl=".$backurl));
 		}
 		else
 		{
 			$backurl = $APPLICATION->GetCurPageParam(
-				'check_key='.$_SESSION["UNIQUE_KEY"],
+				'check_key='.\CSocServAuthManager::getUniqueKey(),
 				array("logout", "auth_service_error", "auth_service_id", "backurl")
 			);
 			$redirect_uri = \CHTTP::URN2URI("/bitrix/tools/oauth/odnoklassniki.php");
@@ -203,7 +203,7 @@ class CSocServOdnoklassniki extends CSocServAuth
 
 		echo $JSScript;
 
-		die();
+		CMain::FinalActions();
 	}
 
 	public static function SendUserFeed($userId, $message)
@@ -220,9 +220,9 @@ class CSocServOdnoklassniki extends CSocServAuth
 
 class COdnoklassnikiInterface
 {
-	const AUTH_URL = "http://www.odnoklassniki.ru/oauth/authorize";
-	const TOKEN_URL = "http://api.odnoklassniki.ru/oauth/token.do";
-	const CONTACTS_URL = "http://api.odnoklassniki.ru/fb.do";
+	const AUTH_URL = "https://www.odnoklassniki.ru/oauth/authorize";
+	const TOKEN_URL = "https://api.odnoklassniki.ru/oauth/token.do";
+	const CONTACTS_URL = "https://api.odnoklassniki.ru/fb.do";
 
 	protected $appID;
 	protected $appSecret;

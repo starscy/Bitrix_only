@@ -98,7 +98,9 @@ class LandingTable extends Entity\DataManager
 			)),
 			'TITLE' => new Entity\StringField('TITLE', array(
 				'title' => Loc::getMessage('LANDING_TABLE_FIELD_LANDING_TITLE'),
-				'required' => true
+				'required' => true,
+				'save_data_modification' => array('\Bitrix\Main\Text\Emoji', 'getSaveModificator'),
+				'fetch_data_modification' => array('\Bitrix\Main\Text\Emoji', 'getFetchModificator'),
 			)),
 			'XML_ID' => new Entity\StringField('XML_ID', array(
 				'title' => Loc::getMessage('LANDING_TABLE_FIELD_XML_ID')
@@ -143,6 +145,9 @@ class LandingTable extends Entity\DataManager
 			'VERSION' => new Entity\IntegerField('VERSION', array(
 				'title' => Loc::getMessage('LANDING_TABLE_FIELD_VERSION'),
 				'default_value' => 10
+			)),
+			'HISTORY_STEP' => new Entity\IntegerField('HISTORY_STEP', array(
+				'title' => Loc::getMessage('LANDING_TABLE_FIELD_HISTORY_STEP')
 			)),
 			'CREATED_BY_ID' => new Entity\IntegerField('CREATED_BY_ID', array(
 				'title' => Loc::getMessage('LANDING_TABLE_FIELD_CREATED_BY_ID'),
@@ -758,7 +763,7 @@ class LandingTable extends Entity\DataManager
 		if (isset($primary['ID']) && array_key_exists('CODE', $fields))
 		{
 			$landingId = (int)$primary['ID'];
-			$resolvedId = null;
+			$updateCode = false;
 
 			Landing::disableCheckDeleted();
 
@@ -772,13 +777,37 @@ class LandingTable extends Entity\DataManager
 
 			if ($landing->exist())
 			{
-				$landingUrl = $landing->getPublicUrl(false, false);
-				$resolvedId = Landing::resolveIdByPublicUrl($landingUrl, $landing->getSiteId());
+				if ($fields['FOLDER_ID'] ?? null)
+				{
+					$res = self::getList([
+						'select' => [
+							'ID'
+						],
+						'filter' => [
+							'!ID' => $primary['ID'],
+							'FOLDER_ID' => $fields['FOLDER_ID'],
+							'=CODE' => $fields['CODE']
+						]
+					]);
+					if ($res->fetch())
+					{
+						$updateCode = true;
+					}
+				}
+				else
+				{
+					$landingUrl = $landing->getPublicUrl(false, false);
+					$resolvedId = Landing::resolveIdByPublicUrl($landingUrl, $landing->getSiteId());
+					if ($resolvedId && $landingId !== $resolvedId)
+					{
+						$updateCode = true;
+					}
+				}
 			}
 
 			Landing::enableCheckDeleted();
 
-			if ($resolvedId && $landingId !== $resolvedId)
+			if ($updateCode)
 			{
 				Landing::disableCheckUniqueAddress();
 				$reUpdate = [

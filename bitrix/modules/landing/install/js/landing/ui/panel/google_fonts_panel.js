@@ -354,7 +354,7 @@
 			}
 			else
 			{
-				context = top;
+				context = BX.Landing.PageObject.getRootWindow();
 			}
 
 			return new Promise(function(resolve) {
@@ -583,8 +583,8 @@
 			return function(item, index) {
 				if (!initedItems.has(item))
 				{
-					var button = item.querySelector(".landing-ui-font-preview-font-button");
-					bind(button, "click", this.onFontSelect.bind(this, response[index - (this.page * 21)]));
+					const button = item.querySelector(".landing-ui-font-preview-font-button");
+					BX.Event.bind(button, 'click', this.onFontSelect.bind(this, response[index - (this.page * 21)]));
 					initedItems.add(item);
 
 					var input = item.querySelector('.landing-ui-font-preview-pangram');
@@ -615,11 +615,10 @@
 		createSearchForm: function()
 		{
 			var debouncedRuntime = BX.Runtime.debounce(this.onFilterChange, 500, this);
-			var rootWindow = BX.Landing.PageObject.getRootWindow();
 			return new BX.Landing.UI.Form.StyleForm({
 				title: BX.Landing.Loc.getMessage("LANDING_GOOGLE_FONT_SEARCH_TITLE"),
 				fields: [
-					new rootWindow.BX.Landing.UI.Field.Text({
+					new BX.Landing.UI.Field.Text({
 						selector: 'searchQuery',
 						textOnly: true,
 						onValueChange: function() {

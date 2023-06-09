@@ -1,6 +1,8 @@
+import 'ui.design-tokens';
+
 import {BaseEvent} from 'main.core.events';
 import {Dom, Tag, Type, Loc, Text} from 'main.core';
-
+import {Image as ImageField} from 'landing.ui.field.image';
 import {Backend} from 'landing.backend';
 import {PageObject} from 'landing.pageobject';
 import BaseControl from "../base_control/base_control";
@@ -9,6 +11,7 @@ import './css/image.css';
 
 export default class Image extends BaseControl
 {
+	// todo: move to type
 	options: {
 		block: BX.Landing.Block,
 		styleNode: BX.Landing.UI.Style,
@@ -22,14 +25,12 @@ export default class Image extends BaseControl
 		this.setEventNamespace('BX.Landing.UI.Field.Color.Image');
 		this.options = options;
 
-		// todo: set dimensions from block
-		const rootWindow = PageObject.getRootWindow();
-		this.imgField = new rootWindow.BX.Landing.UI.Field.Image({
+		this.imgField = new ImageField({
 			id: 'landing_ui_color_image_' + Text.getRandom().toLowerCase(),
 			className: 'landing-ui-field-color-image-image',
+			contextType: ImageField.CONTEXT_TYPE_STYLE,
 			compactMode: true,
 			disableLink: true,
-			// selector: options.selector,
 			disableAltField: true,
 			allowClear: true,
 			dimensions: {width: 1920},
@@ -42,27 +43,19 @@ export default class Image extends BaseControl
 		this.imgField.subscribe('change', this.onImageChange.bind(this));
 
 		this.sizeField = new BX.Landing.UI.Field.Dropdown({
-			// todo: need commented fields?
 			id: 'landing_ui_color_image_size_' + Text.getRandom().toLowerCase(),
-			// title: 'size field title',
-			// description: 'ButtonGroup size description',
 			title: Loc.getMessage('LANDING_FIELD_COLOR-BG_SIZE_TITLE'),
 			className: 'landing-ui-field-color-image-size',
-			// selector: this.options.selector,
 			items: BgImageValue.getSizeItemsForButtons(),
 			onChange: this.onSizeChange.bind(this),
 			contentRoot: this.options.contentRoot,
 		});
 
 		this.attachmentField = new BX.Landing.UI.Field.Checkbox({
-			// todo: need commented fields?
 			id: 'landing_ui_color_image_attach_' + Text.getRandom().toLowerCase(),
 			className: 'landing-ui-field-color-image-attachment',
-			// title: 'attachement field title',
-			// description: 'ButtonGroup size description',
 			multiple: false,
 			compact: true,
-			// selector: options.selector,
 			items: [
 				{name: Loc.getMessage('LANDING_FIELD_COLOR-BG_FIXED'), value: true},
 			],

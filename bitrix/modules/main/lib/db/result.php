@@ -218,7 +218,7 @@ abstract class Result implements \IteratorAggregate
 			{
 				$data[$key] = $converter->encode(
 					$val,
-					(isset($data[$key."_TYPE"])? $data[$key."_TYPE"] : \Bitrix\Main\Text\Converter::TEXT)
+					($data[$key."_TYPE"] ?? \Bitrix\Main\Text\Converter::TEXT)
 				);
 			}
 		}
@@ -321,7 +321,7 @@ abstract class Result implements \IteratorAggregate
 	 * <b>Traversable</b>
 	 * @since 5.0.0
 	 */
-	public function getIterator()
+	public function getIterator(): \Traversable
 	{
 		return new ResultIterator($this);
 	}

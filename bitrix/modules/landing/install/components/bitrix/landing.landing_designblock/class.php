@@ -29,7 +29,7 @@ class LandingDesignBlockComponent extends LandingBaseComponent
 			function(\Bitrix\Main\Event $event) use ($params)
 			{
 				$result = new \Bitrix\Main\Entity\EventResult;
-				$options['params'] = (array)$params['PARAMS'];
+				$options['params'] = (array) ($params['PARAMS'] ?? []);
 				$options['params']['type'] = $params['TYPE'];
 				$result->modifyFields([
 					'options' => $options

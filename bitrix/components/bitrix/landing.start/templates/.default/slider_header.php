@@ -3,6 +3,12 @@ if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED !== true)
 {
 	die();
 }
+
+\Bitrix\Main\UI\Extension::load([
+	'ui.design-tokens',
+	'ui.fonts.opensans',
+]);
+
 ?><!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="<?= LANGUAGE_ID?>" lang="<?= LANGUAGE_ID?>">
 <head>
@@ -22,7 +28,7 @@ if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED !== true)
 				<?$APPLICATION->ShowViewContent('pagetitle');?>
 			</div>
 			<div class="landing-slider-pagetitle">
-				<span id="pagetitle" class="landing-slider-pagetitle-item"><?$APPLICATION->ShowTitle(false);?></span>
+				<div id="pagetitle" class="landing-slider-pagetitle-title"><?$APPLICATION->ShowTitle(false);?></div>
 				<div class="landing-slider-pagetitle-actions"><?$APPLICATION->ShowViewContent('title_actions');?></div>
 			</div>
 		</div>

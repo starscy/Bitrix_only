@@ -88,6 +88,7 @@ class CRestConfigurationInstallComponent extends CBitrixComponent implements Con
 			'MANIFEST_CODE',
 			'UNINSTALL_APP_ON_FINISH',
 			'PROCESS_ID',
+			'FROM',
 		];
 	}
 
@@ -111,6 +112,7 @@ class CRestConfigurationInstallComponent extends CBitrixComponent implements Con
 			'NEED_START_BTN' => true,
 			'NEED_CLEAR_FULL_CONFIRM' => true,
 			'IMPORT_BY_PROCESS_ID' => $this->isImportByProcessId(),
+			'FROM' => $this->arParams['FROM'] ?? '',
 		];
 		$manifest = null;
 
@@ -353,6 +355,17 @@ class CRestConfigurationInstallComponent extends CBitrixComponent implements Con
 					$this->deleteBackupFolder();
 				}
 			}
+
+			$userId = 0;
+			global $USER;
+			if ($USER->isAuthorized())
+			{
+				$userId = $USER->getId();
+			}
+			$import->getSetting()->set(
+				Setting::SETTING_USER_ID,
+				$userId
+			);
 
 			if ($this->arParams['IMPORT_DISK_FOLDER_ID'] && $this->arParams['IMPORT_DISK_STORAGE_PARAMS'])
 			{

@@ -9,7 +9,7 @@ $MESS["SUP_EDITION"] = "Редакция продукта:";
 $MESS["SUP_SITES"] = "Максимальное количество сайтов:";
 $MESS["SUP_USERS"] = "Максимальное количество пользователей:";
 $MESS["SUP_ACTIVE"] = "Обновления доступны:";
-$MESS["SUP_MARKET_SUBSCRIPTION"] = "Битрикс24.Маркет Плюс действует до:";
+$MESS["SUP_MARKET_SUBSCRIPTION"] = "Битрикс24.Маркет Плюс доступен до:";
 $MESS["SUP_MARKET_SUBSCRIPTION_DEMO"] = "Пробный период Битрикс24.Маркет Плюс действует до:";
 $MESS["SUP_ACTIVE_PERIOD"] = "с #DATE_FROM# по #DATE_TO#";
 $MESS["SUP_SERVER"] = "Сервер обновлений:";
@@ -182,9 +182,9 @@ $MESS["SUP_PHP_L439"] = "Вы используете версию PHP #VERS#, п
 $MESS["SUP_MYSQL_LCP_ERROR"] = "Кодировка используемой вами базы данных MySql '#CP1#', системе обновлений необходима кодировка '#CP#'. Обратитесь к администратору MySql для выполнения запроса alter database #DB# default character set #CP#";
 $MESS["SUP_MYSQL_COLL_ERROR"] = "Collation используемой вами базы данных MySql '#CD#' не совпадает с collation соединения '#CC#'";
 $MESS["SUP_CHECK_UPDATES_PARTNER"] = "Обновления партнерских модулей";
-$MESS["SUP_CURRENT_NUMBER_OF_USERS"] = ", из них используется <a href=\"/bitrix/admin/user_admin.php?lang=ru&INTRANET_USERS=Y&apply_filter=Y\">#NUM#</a>";
+$MESS["SUP_CURRENT_NUMBER_OF_USERS"] = ", всего используется #NUM#";
 $MESS["SUP_USERS_IS_NOT_LIMITED"] = "Лицензирование по пользователям не производится.";
-$MESS["SUP_CURRENT_NUMBER_OF_USERS1"] = "Активных пользователей: <a href=\"/bitrix/admin/user_admin.php?lang=ru&INTRANET_USERS=Y&apply_filter=Y\">#NUM#</a>.";
+$MESS["SUP_CURRENT_NUMBER_OF_USERS1"] = "Активных пользователей: #NUM#.";
 $MESS["SUP_RESERVED_KEY_HINT"] = "Перед использованием системы обновлений вам необходимо активировать ваш лицензионный ключ.";
 $MESS["SUP_SYSTEM_MESSAGE"] = "Внимание";
 $MESS["SUP_CANT_LOCK_UPDATES"] = "Система обновлений должна быть запущена в одном окне браузера";
@@ -222,4 +222,5 @@ $MESS['SUP_WRONG_GD'] = "Для обновления продукта необх
 $MESS["SUP_CONFLICT_POPUP_TITLE"] = "Конфликты зависимостей";
 $MESS["SUP_CONFLICT_NOTHING_SELECTED"] = "Ничего не выбрано";
 $MESS["SUP_CONFLICT_MODULE_MESSAGE"] = "Для установки #MODULE# необходимо наличие обновлений: #REQUIRES#";
+$MESS['SUP_PHP_LWARN_PHP8'] = 'Подробнее о переходе на PHP 8 вы можете прочитать <a href="https://helpdesk.bitrix24.ru/open/17332020/">на странице поддержки</a>.';
 ?>

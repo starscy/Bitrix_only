@@ -20,7 +20,8 @@ class Background extends \Bitrix\Landing\Hook\Page
 	{
 		return array(
 			'USE' => new Field\Checkbox('USE', array(
-				'title' => Loc::getMessage('LANDING_HOOK_BG_USE')
+				'title' => Loc::getMessage('LANDING_HOOK_BG_USE'),
+				'help' => Loc::getMessage('LANDING_HOOK_BG_DESCRIPTION'),
 			)),
 			'PICTURE' => new Field\Hidden('PICTURE', array(
 				'title' => Loc::getMessage('LANDING_HOOK_BG_PICTURE'),
@@ -43,16 +44,18 @@ class Background extends \Bitrix\Landing\Hook\Page
 			)),
 			'POSITION' => new Field\Select('POSITION', array(
 				'title' => Loc::getMessage('LANDING_HOOK_BG_POSITION'),
-				'help' => Loc::getMessage('LANDING_HOOK_BG_POSITION_HELP_2'),
+				'help' => Loc::getMessage('LANDING_HOOK_BG_POSITION_HELP_3'),
+				'htmlHelp' => true,
 				'options' => array(
 					'center' => Loc::getMessage('LANDING_HOOK_BG_POSITION_CENTER_2'),
 					'repeat' => Loc::getMessage('LANDING_HOOK_BG_POSITION_REPEAT_2'),
 					'center_repeat_y' => Loc::getMessage('LANDING_HOOK_BG_POSITION_CENTER_REPEAT_Y'),
+					'no_repeat' => Loc::getMessage('LANDING_HOOK_BG_POSITION_CENTER_NO_REPEAT'),
 				)
 			)),
 			'COLOR' => new Field\Text('COLOR', array(
 				'title' => Loc::getMessage('LANDING_HOOK_BG_COLOR')
-			))
+			)),
 		);
 	}
 
@@ -69,7 +72,7 @@ class Background extends \Bitrix\Landing\Hook\Page
 	 * Description of Hook, if you want.
 	 * @return string
 	 */
-	public function getDescription()
+	public function getDescription(): string
 	{
 		return Loc::getMessage('LANDING_HOOK_BG_DESCRIPTION');
 	}
@@ -141,11 +144,20 @@ class Background extends \Bitrix\Landing\Hook\Page
 							background-position: center;
 							background-repeat: no-repeat;
 						}
+						.bx-ios.bx-touch body:before {
+							content: "";
+							background-image: url("' . $picture . '");
+							background-position: center;
+							background-size: cover;
+							position: fixed;
+							left: 0;
+							right: 0;
+							top: 0;
+							bottom: 0;
+							z-index: -1;
+						}
 						.bx-ios.bx-touch body {
-								background-attachment: scroll;
-								background-position: top;
-								background-repeat: repeat-y;
-								background-size: 100%;
+							background-image: none;
 						}
 					</style>'
 				);
@@ -159,6 +171,20 @@ class Background extends \Bitrix\Landing\Hook\Page
 							background-attachment: fixed;
 							background-position: center;
 							background-repeat: repeat;
+						}
+					</style>'
+				);
+			}
+			elseif ($position === 'no_repeat')
+			{
+				Asset::getInstance()->addString(
+					'<style type="text/css">
+						body {
+							background-image: url("' . $picture . '");
+							background-size: 100%;
+							background-attachment: fixed;
+							background-position: top center;
+							background-repeat: no-repeat;
 						}
 					</style>'
 				);

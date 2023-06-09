@@ -1,6 +1,9 @@
 <?
 
 use \Bitrix\Main\Web\HttpClient;
+use Bitrix\Main\Web\Json;
+use Bitrix\Main\Web\JWK;
+use Bitrix\Main\Web\JWT;
 
 IncludeModuleLangFile(__FILE__);
 
@@ -89,11 +92,10 @@ class CSocServGoogleOAuth extends CSocServAuth
 		{
 			$this->entityOAuth->addScope($addScope);
 		}
-		CSocServAuthManager::SetUniqueKey();
 		if(IsModuleInstalled('bitrix24') && defined('BX24_HOST_NAME'))
 		{
 			$redirect_uri = static::getControllerUrl()."/redirect.php";
-			$state = $this->getEntityOAuth()->getRedirectUri()."?check_key=".$_SESSION["UNIQUE_KEY"]."&state=";
+			$state = $this->getEntityOAuth()->getRedirectUri()."?check_key=".\CSocServAuthManager::getUniqueKey()."&state=";
 			$backurl = $GLOBALS["APPLICATION"]->GetCurPageParam('', array("logout", "auth_service_error", "auth_service_id", "backurl"));
 			$state .= urlencode('provider='.static::ID.
 				"&state=".urlencode("backurl=".urlencode($backurl)
@@ -104,7 +106,7 @@ class CSocServGoogleOAuth extends CSocServAuth
 		}
 		else
 		{
-			$state = 'provider='.static::ID.'&site_id='.SITE_ID.'&backurl='.urlencode($GLOBALS["APPLICATION"]->GetCurPageParam('check_key='.$_SESSION["UNIQUE_KEY"], array("logout", "auth_service_error", "auth_service_id", "backurl"))).'&mode='.$location.(isset($arParams['BACKURL']) ? '&redirect_url='.urlencode($arParams['BACKURL']) : '');
+			$state = 'provider='.static::ID.'&site_id='.SITE_ID.'&backurl='.urlencode($GLOBALS["APPLICATION"]->GetCurPageParam('check_key='.\CSocServAuthManager::getUniqueKey(), array("logout", "auth_service_error", "auth_service_id", "backurl"))).'&mode='.$location.(isset($arParams['BACKURL']) ? '&redirect_url='.urlencode($arParams['BACKURL']) : '');
 			$redirect_uri = $this->getEntityOAuth()->getRedirectUri();
 		}
 
@@ -166,7 +168,7 @@ class CSocServGoogleOAuth extends CSocServAuth
 				$last_name = $aName[1];
 		}
 
-		$id = $arGoogleUser['id'];
+		$id = $arGoogleUser['id'] ?? $arGoogleUser['sub'];
 		$email = $arGoogleUser['email'];
 
 		if($arGoogleUser['email'] <> '')
@@ -217,7 +219,7 @@ class CSocServGoogleOAuth extends CSocServAuth
 			{
 				$temp_path =  CFile::GetTempName('', sha1($arGoogleUser['picture']));
 
-				$http = new \Bitrix\Main\Web\HttpClient();
+				$http = new HttpClient();
 				$http->setPrivateIp(false);
 				if($http->download($arGoogleUser['picture'], $temp_path))
 				{
@@ -367,7 +369,7 @@ class CSocServGoogleOAuth extends CSocServAuth
 
 		echo $JSScript;
 
-		die();
+		CMain::FinalActions();
 	}
 
 	public function setUser($userId)
@@ -410,6 +412,9 @@ class CGoogleOAuthInterface extends CSocServOAuthTransport
 {
 	const SERVICE_ID = "GoogleOAuth";
 
+	public const CERTS_URL = "https://www.googleapis.com/oauth2/v3/certs";
+	public const JWT_ALG = ["RS256"];
+
 	const AUTH_URL = "https://accounts.google.com/o/oauth2/auth";
 	const TOKEN_URL = "https://accounts.google.com/o/oauth2/token";
 	const CONTACTS_URL = "https://www.googleapis.com/oauth2/v1/userinfo";
@@ -426,6 +431,9 @@ class CGoogleOAuthInterface extends CSocServOAuthTransport
 	protected $scope = array();
 
 	protected $arResult = array();
+
+	protected ?string $idTokenAuth = null;
+	protected ?array $fetchedPublicKeys = null;
 
 	public function __construct($appID = false, $appSecret = false, $code = false)
 	{
@@ -505,6 +513,60 @@ class CGoogleOAuthInterface extends CSocServOAuthTransport
 		;
 	}
 
+	public function setIdTokenAuth(string $tokenId): void
+	{
+		$this->idTokenAuth = $tokenId;
+	}
+
+	private function fetchPublicKeys(): ?array
+	{
+		if ($this->fetchedPublicKeys)
+		{
+			return $this->fetchedPublicKeys;
+		}
+
+		try
+		{
+			$publicKeys = $this->getDecodedJson(self::CERTS_URL);
+			if (empty($publicKeys['keys']) || count($publicKeys['keys']) < 1)
+			{
+				return null;
+			}
+
+			$parsedPublicKeys = JWK::parseKeySet($publicKeys['keys']);
+			foreach ($parsedPublicKeys as $keyId => $publicKey)
+			{
+				$details = openssl_pkey_get_details($publicKey);
+				$this->fetchedPublicKeys[$keyId] = $details['key'];
+			}
+
+			return $this->fetchedPublicKeys;
+		}
+		catch (\Exception $e)
+		{
+		}
+
+		return null;
+	}
+
+	private function decodeIdentityToken(string $identityToken): array
+	{
+		$publicKeys = $this->fetchPublicKeys();
+		if ($publicKeys === null)
+		{
+			return [];
+		}
+
+		try
+		{
+			return (array)JWT::decode($identityToken, $publicKeys, self::JWT_ALG);
+		}
+		catch (UnexpectedValueException $exception)
+		{
+			return [];
+		}
+	}
+
 	public function GetAccessToken($redirect_uri = false)
 	{
 		$tokens = $this->getStorageTokens();
@@ -549,10 +611,6 @@ class CGoogleOAuthInterface extends CSocServOAuthTransport
 			}
 		}
 
-		$http = new HttpClient(array(
-			"socketTimeout" => $this->httpTimeout
-		));
-
 		$authParams = [
 			"client_id" => $this->appID,
 			"code" => $this->code,
@@ -561,16 +619,7 @@ class CGoogleOAuthInterface extends CSocServOAuthTransport
 			"client_secret" => $this->appSecret,
 		];
 
-		$result = $http->post(static::TOKEN_URL, $authParams);
-
-		try
-		{
-			$this->arResult = \Bitrix\Main\Web\Json::decode($result);
-		}
-		catch(\Bitrix\Main\ArgumentException $e)
-		{
-			$this->arResult = array();
-		}
+		$this->arResult = $this->getDecodedJson(static::TOKEN_URL, $authParams);
 
 		if(isset($this->arResult["access_token"]) && $this->arResult["access_token"] <> '')
 		{
@@ -594,16 +643,19 @@ class CGoogleOAuthInterface extends CSocServOAuthTransport
 
 	public function GetCurrentUser()
 	{
+		if ($this->idTokenAuth)
+		{
+			$identity = $this->decodeIdentityToken($this->idTokenAuth);
+
+			return $identity ?: false;
+		}
+
 		if($this->access_token === false)
 			return false;
 
-		$h = new HttpClient(array(
-			"socketTimeout" => $this->httpTimeout,
-		));
-		$result = $h->get(static::CONTACTS_URL.'?access_token='.urlencode($this->access_token));
-		$result = \Bitrix\Main\Web\Json::decode($result);
+		$result = $this->getDecodedJson(static::CONTACTS_URL.'?access_token='.urlencode($this->access_token));
 
-		if(is_array($result))
+		if ($result)
 		{
 			$result["access_token"] = $this->access_token;
 			$result["refresh_token"] = $this->refresh_token;
@@ -615,17 +667,26 @@ class CGoogleOAuthInterface extends CSocServOAuthTransport
 
 	public function GetAppInfo()
 	{
-		if($this->access_token === false)
+		if ($this->idTokenAuth)
+		{
+			$identity = $this->decodeIdentityToken($this->idTokenAuth);
+			if (empty($identity['aud']))
+			{
+				return false;
+			}
+
+			return [
+				'id' => $identity['aud'],
+			];
+		}
+		if ($this->access_token === false)
+		{
 			return false;
+		}
 
-		$h = new \Bitrix\Main\Web\HttpClient();
-		$h->setTimeout($this->httpTimeout);
+		$result = $this->getDecodedJson(static::TOKENINFO_URL.'?access_token='.urlencode($this->access_token));
 
-		$result = $h->get(static::TOKENINFO_URL.'?access_token='.urlencode($this->access_token));
-
-		$result = \Bitrix\Main\Web\Json::decode($result);
-
-		if(is_array($result) && $result["audience"])
+		if ($result && $result["audience"])
 		{
 			$result["id"] = $result["audience"];
 		}
@@ -773,25 +834,12 @@ class CGoogleOAuthInterface extends CSocServOAuthTransport
 			$refreshToken = $this->refresh_token;
 		}
 
-		$http = new HttpClient(
-			array("socketTimeout" => $this->httpTimeout)
-		);
-
-		$result = $http->post(static::TOKEN_URL, [
+		$this->arResult = $this->getDecodedJson(static::TOKEN_URL, [
 			"client_id" => $this->appID,
 			"refresh_token"=>$refreshToken,
 			"grant_type"=>"refresh_token",
 			"client_secret" => $this->appSecret,
 		]);
-
-		try
-		{
-			$this->arResult = \Bitrix\Main\Web\Json::decode($result);
-		}
-		catch(\Bitrix\Main\ArgumentException $e)
-		{
-			$this->arResult = array();
-		}
 
 		if (isset($this->arResult["access_token"]) && $this->arResult["access_token"] <> '')
 		{

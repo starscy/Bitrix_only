@@ -400,7 +400,7 @@ class AppTable extends Main\Entity\DataManager
 			}
 		}
 
-		if($data['fields']['STATUS'] !== static::STATUS_LOCAL)
+		if(isset($data['fields']['STATUS']) && $data['fields']['STATUS'] !== static::STATUS_LOCAL)
 		{
 			\Bitrix\Rest\Engine\Access::getActiveEntity(true);
 		}
@@ -477,6 +477,7 @@ class AppTable extends Main\Entity\DataManager
 						'select' => [
 							'ID',
 							'PLACEMENT',
+							'USER_ID',
 						],
 					]
 				);
@@ -488,6 +489,7 @@ class AppTable extends Main\Entity\DataManager
 						[
 							'ID' => $item['ID'],
 							'PLACEMENT' => $item['PLACEMENT'],
+							'USER_ID' => $item['USER_ID'],
 						]
 					);
 					EventManager::getInstance()->send($event);
@@ -834,7 +836,8 @@ class AppTable extends Main\Entity\DataManager
 		}
 
 		if (
-			array_key_exists('#DAYS#', $replace)
+			is_array($replace)
+			&& array_key_exists('#DAYS#', $replace)
 			&& (
 				is_int($replace['#DAYS#'])
 				|| preg_match('/^(-|)\d+$/', $replace['#DAYS#'])

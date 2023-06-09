@@ -3,11 +3,13 @@
 namespace Bitrix\Landing\Update\Block;
 
 use Bitrix\Landing\File;
+use Bitrix\Landing\Internals\FileTable;
 use Bitrix\Landing\Manager;
 use Bitrix\Landing\Internals\BlockTable;
 use Bitrix\Landing\Block;
 use Bitrix\Landing\Node;
 use Bitrix\Main\ArgumentTypeException;
+use Bitrix\Main\EO_File;
 
 /**
  * After enable file duplicate control for all and run the migrator,
@@ -55,59 +57,70 @@ class DuplicateImages
 	public function update(bool $needSave = false): string
 	{
 		$srcForReplace = [];
-		foreach ($this->manifest['nodes'] as $selector => $node)
+		if (isset($this->manifest['nodes']) && is_array($this->manifest['nodes']))
 		{
-			if (in_array($node['type'], self::IMG_TYPES, true))
+			foreach ($this->manifest['nodes'] as $selector => $node)
 			{
-				$nodeClass = Node\Type::getClassName($node['type']);
-				$previousValues = call_user_func([$nodeClass, 'getNode'], $this->block, $selector);
-
-				foreach ($previousValues as $previousValue)
+				if (in_array($node['type'], self::IMG_TYPES, true))
 				{
-					if (!$previousValue['id'] && !$previousValue['id2x'])
+					$nodeClass = Node\Type::getClassName($node['type']);
+					$previousValues = call_user_func([$nodeClass, 'getNode'], $this->block, $selector);
+
+					foreach ($previousValues as $previousValue)
 					{
-						continue;
-					}
-
-					$hostUrl = '//' . Manager::getHttpHost();
-
-					$newSrc = File::getFilePath($previousValue['id']);
-					$newSrc = Manager::getUrlFromFile($newSrc);
-					$previousSrc =
-						$previousValue['isLazy'] === 'Y'
-							? $previousValue['lazyOrigSrc']
-							: $previousValue['src']
-					;
-					if ($previousSrc !== $newSrc)
-					{
-						$srcForReplace[$previousSrc] = $newSrc;
-
-						// add urls w/o host url too
-						if (strpos($newSrc, $hostUrl) === 0)
+						if (!($previousValue['id'] ?? null) && !($previousValue['id2x'] ?? null))
 						{
-							$srcForReplace[str_replace($hostUrl, '', $previousSrc)] =
-								str_replace($hostUrl, '', $newSrc);
+							continue;
 						}
-					}
 
-					if ($previousValue['id2x'])
-					{
-						$newSrc2x = File::getFilePath($previousValue['id2x']);
-						$newSrc2x = Manager::getUrlFromFile($newSrc2x);
-						$previousSrc2x =
-							$previousValue['isLazy'] === 'Y'
-								? $previousValue['lazyOrigSrc2x']
-								: $previousValue['src2x']
-						;
-						if ($previousSrc2x !== $newSrc2x)
+						if (
+							($previousValue['id'] && !File::getFilePath($previousValue['id']))
+							|| ($previousValue['id2x'] && !File::getFilePath($previousValue['id2x']))
+						)
 						{
-							$srcForReplace[$previousSrc2x] = $newSrc2x;
+							continue;
+						}
+
+						$hostUrl = '//' . Manager::getHttpHost();
+
+						$newSrc = File::getFilePath($previousValue['id']);
+						$newSrc = Manager::getUrlFromFile($newSrc);
+						$previousSrc =
+							$previousValue['isLazy'] === 'Y'
+								? $previousValue['lazyOrigSrc']
+								: $previousValue['src']
+						;
+						if ($previousSrc !== $newSrc)
+						{
+							$srcForReplace[$previousSrc] = $newSrc;
 
 							// add urls w/o host url too
-							if (strpos($newSrc2x, $hostUrl) === 0)
+							if (strpos($newSrc, $hostUrl) === 0)
 							{
-								$srcForReplace[str_replace($hostUrl, '', $previousSrc2x)] =
-									str_replace($hostUrl, '', $newSrc2x);
+								$srcForReplace[str_replace($hostUrl, '', $previousSrc)] =
+									str_replace($hostUrl, '', $newSrc);
+							}
+						}
+
+						if ($previousValue['id2x'])
+						{
+							$newSrc2x = File::getFilePath($previousValue['id2x']);
+							$newSrc2x = Manager::getUrlFromFile($newSrc2x);
+							$previousSrc2x =
+								$previousValue['isLazy'] === 'Y'
+									? $previousValue['lazyOrigSrc2x']
+									: $previousValue['src2x']
+							;
+							if ($previousSrc2x !== $newSrc2x)
+							{
+								$srcForReplace[$previousSrc2x] = $newSrc2x;
+
+								// add urls w/o host url too
+								if (strpos($newSrc2x, $hostUrl) === 0)
+								{
+									$srcForReplace[str_replace($hostUrl, '', $previousSrc2x)] =
+										str_replace($hostUrl, '', $newSrc2x);
+								}
 							}
 						}
 					}
@@ -150,6 +163,66 @@ class DuplicateImages
 		{
 			$block = new self($row['ID']);
 			$block->update(true);
+		}
+	}
+
+	public static function onAfterFileDeleteDuplicate(EO_File $original, EO_File $duplicate)
+	{
+		// BLOCKS
+		$sitesToUpdate = [];
+		$oldPath = '/' . $duplicate->getSubdir() . '/' . $duplicate->getFileName();
+		$newPath = '/' . $original->getSubdir() . '/' . $original->getFileName();
+
+		$resFiles = FileTable::query()
+			->addSelect('ENTITY_ID')
+			->where('ENTITY_TYPE', '=', File::ENTITY_TYPE_BLOCK)
+			->where('FILE_ID', $duplicate->getId())
+			->exec()
+		;
+		while($blockFile = $resFiles->fetch())
+		{
+			$resBlocks = BlockTable::query()
+				->addSelect('ID')
+				->addSelect('CONTENT')
+				->addSelect('LANDING.SITE_ID')
+				->where('ID', $blockFile['ENTITY_ID'])
+				->exec()
+			;
+			while($block = $resBlocks->fetch())
+			{
+				BlockTable::update($block['ID'], [
+					'CONTENT' => str_replace($oldPath, $newPath, $block['CONTENT'])
+				]);
+				$siteId = (int)$block['LANDING_INTERNALS_BLOCK_LANDING_SITE_ID'];
+				if ($siteId && $siteId > 0)
+				{
+					$sitesToUpdate[] = $siteId;
+				}
+			}
+		}
+
+		$sitesToUpdate = array_unique($sitesToUpdate);
+		foreach($sitesToUpdate as $siteId)
+		{
+			Manager::clearCacheForSite($siteId);
+		}
+
+		// ASSETS
+		$landingsForUpdate = [];
+		$resFiles = FileTable::query()
+			->addSelect('ENTITY_ID')
+			->where('ENTITY_TYPE', '=', File::ENTITY_TYPE_ASSET)
+			->where('FILE_ID', $duplicate->getId())
+			->exec()
+		;
+		while($assetFile = $resFiles->fetch())
+		{
+			$landingsForUpdate[] = abs((int)$assetFile['ENTITY_ID']);
+		}
+		$landingsForUpdate = array_unique($landingsForUpdate);
+		foreach($landingsForUpdate as $landingId)
+		{
+			Manager::clearCacheForLanding($landingId);
 		}
 	}
 }

@@ -23,7 +23,7 @@ $arResult["FOR_INTRANET"] = true;
 
 $arServices = $oAuthManager->GetActiveAuthServices($arResult);
 $arResult["AUTH_SERVICES"] = $arServices;
-
+$arResult["DB_SOCSERV_USER"] = [];
 //***************************************
 //Checking the input parameters.
 //***************************************
@@ -82,13 +82,8 @@ $dbSocservUser = \Bitrix\Socialservices\UserTable::getList([
 //***************************************
 while($arUser = $dbSocservUser->fetch())
 {
-	if(!array_key_exists($arUser["EXTERNAL_AUTH_ID"], $arServices))
-	{
-		continue;
-	}
-
 	if($arUser["EXTERNAL_AUTH_ID"] == 'Twitter')
-		$arResult["PostToShow"]["SPERM"] = unserialize($arUser["PERMISSIONS"]);
+		$arResult["PostToShow"]["SPERM"] = unserialize($arUser["PERMISSIONS"], ['allowed_classes' => false]);
 	if($arUser["NAME"] != '' && $arUser["LAST_NAME"] != '')
 		$userName = $arUser["NAME"]." ".$arUser["LAST_NAME"];
 	elseif ($arUser["NAME"] != '')
@@ -121,6 +116,11 @@ while($arUser = $dbSocservUser->fetch())
 
 	}
 
+	if(!array_key_exists($arUser["EXTERNAL_AUTH_ID"], $arServices))
+	{
+		continue;
+	}
+
 	foreach($arResult["AUTH_SERVICES"] as $key => $value)
 	{
 		if($key == $arUser["EXTERNAL_AUTH_ID"])
@@ -138,7 +138,7 @@ while($arUser = $dbSocservUser->fetch())
 		"VIEW_NAME" => htmlspecialcharsbx($userName),
 		"PERSONAL_LINK" => htmlspecialcharsbx($arUser["PERSONAL_WWW"]),
 		"PERSONAL_PHOTO" => intval($arUser["PERSONAL_PHOTO"]),
-		"PERMISSIONS" => unserialize($arUser["PERMISSIONS"]),
+		"PERMISSIONS" => unserialize($arUser["PERMISSIONS"], ['allowed_classes' => false]),
 	);
 
 	if($arUser["CAN_DELETE"] != 'N' && $arParams["ALLOW_DELETE"] != 'N')

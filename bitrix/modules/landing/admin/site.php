@@ -49,6 +49,7 @@ $landing = $request->get('id');
 $cmp = $request->get('cmp');
 $isFrame = $request->get('IFRAME') == 'Y';
 $isAjax = $request->get('IS_AJAX') == 'Y';
+$storeEnabled = !Manager::isB24() && Manager::isStoreEnabled();
 $actionFolder = 'folderId';
 $type = 'SMN';
 $siteTemplate = Manager::getTemplateId($site);
@@ -143,6 +144,9 @@ else
 // paths
 $landingsPage = 'landing_site.php?lang=' . LANGUAGE_ID . '&site=' . $site;
 
+$siteSettings = $landingsPage . '&cmp=landing_settings';
+$landingSettings = $landingsPage . '&cmp=landing_settings&id=#landing_edit#';
+
 $editPage = $landingsPage . '&cmp=landing_edit&id=#landing_edit#';
 $editPage .= ($siteTemplate ? '&template=' . $siteTemplate : '');
 
@@ -200,8 +204,6 @@ echo '<div class="landing-content-title-admin">';
 
 if (!$cmp && !$isFrame)
 {
-	$storeEnabled = !Manager::isB24() && Manager::isStoreEnabled();
-
 	// create buttons
 	if (!Rights::hasAccessForSite($siteId, Rights::ACCESS_TYPES['edit']))
 	{
@@ -240,21 +242,7 @@ if (!$cmp && !$isFrame)
 	{
 		$settingsLink[] = [
 			'TITLE' => Loc::getMessage('LANDING_ADMIN_ACTION_SETTINGS'),
-			'LINK' => $editSite
-		];
-		if ($storeEnabled)
-		{
-			$uriSettCatalog = new \Bitrix\Main\Web\Uri($editSite);
-			$uriSettCatalog->addParams(['tpl' => 'catalog']);
-			$settingsLink[] = [
-				'TITLE' => Loc::getMessage('LANDING_ADMIN_ACTION_CATALOG'),
-				'LINK' => $uriSettCatalog->getUri()
-			];
-			unset($uriSettCatalog);
-		}
-		$settingsLink[] = [
-			'TITLE' => Loc::getMessage('LANDING_ADMIN_ACTION_DESIGN'),
-			'LINK' => $designSite
+			'LINK' => $siteSettings
 		];
 	}
 
@@ -355,6 +343,7 @@ if ($cmp == 'landing_edit')
 					'SITE_WORK_MODE' => 'Y',
 					'LANG_ID' => LANGUAGE_ID,
 					'ADMIN_SECTION' => 'Y',
+					'ACTION_FOLDER' => $actionFolder,
 				),
 				$component
 			);
@@ -414,6 +403,47 @@ elseif ($cmp == 'site_edit')
 		);
 	}
 }
+elseif ($cmp == 'landing_settings')
+{
+	$pages = [
+		'PAGE_URL_SITE_EDIT' => $editSite,
+		'PAGE_URL_SITE_DESIGN' => $designSite,
+	];
+	if ($storeEnabled)
+	{
+		$uriSettCatalog = new \Bitrix\Main\Web\Uri($editSite);
+		$uriSettCatalog->addParams(['tpl' => 'catalog']);
+		$pages['PAGE_URL_CATALOG_EDIT'] = $uriSettCatalog->getUri();
+		unset($uriSettCatalog);
+	}
+
+	$componentParams = [
+		'POPUP_COMPONENT_NAME' => 'bitrix:landing.settings',
+		'POPUP_COMPONENT_TEMPLATE_NAME' => '',
+		'POPUP_COMPONENT_PARAMS' => [
+			'SITE_ID' => $siteId,
+			'TYPE' => $storeEnabled ? 'STORE' : $type,
+			'PAGES' => $pages,
+		],
+		'USE_PADDING' => false,
+		'PAGE_MODE' => false,
+		'CLOSE_AFTER_SAVE' => false,
+		'RELOAD_GRID_AFTER_SAVE' => false,
+		'RELOAD_PAGE_AFTER_SAVE' => true,
+	];
+	if ($landing > 0)
+	{
+		$componentParams['POPUP_COMPONENT_PARAMS']['LANDING_ID'] = $landing;
+		$componentParams['POPUP_COMPONENT_PARAMS']['PAGES']['PAGE_URL_LANDING_EDIT'] = $editPage;
+		$componentParams['POPUP_COMPONENT_PARAMS']['PAGES']['PAGE_URL_LANDING_DESIGN'] = $designPage;
+	}
+
+	$APPLICATION->includeComponent(
+		'bitrix:ui.sidepanel.wrapper',
+		'',
+		$componentParams,
+	);
+}
 elseif ($cmp == 'folder_edit')
 {
 	$APPLICATION->IncludeComponent(
@@ -446,15 +476,16 @@ else
 	$APPLICATION->IncludeComponent(
 		'bitrix:landing.landings',
 		'.default',
-		array(
+		[
 			'TYPE' => $type,
 			'SITE_ID' => $siteId,
 			'ACTION_FOLDER' => $actionFolder,
 			'PAGE_URL_LANDING_EDIT' => $editPage,
 			'PAGE_URL_LANDING_VIEW' => $viewPage,
 			'PAGE_URL_LANDING_DESIGN' => $designPage,
-			'PAGE_URL_FOLDER_EDIT' => $editFolder
-		),
+			'PAGE_URL_FOLDER_EDIT' => $editFolder,
+			'PAGE_URL_LANDING_SETTINGS' => $landingSettings,
+		],
 		false
 	);
 }

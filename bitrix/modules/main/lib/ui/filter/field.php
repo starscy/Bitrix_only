@@ -329,7 +329,16 @@ class Field
 	 * @param string $placeholder
 	 * @return array
 	 */
-	public static function number($name, $type = NumberType::SINGLE, $values = array(), $label = "", $placeholder = "")
+	public static function number(
+		$name,
+		$type = NumberType::SINGLE,
+		$values = [],
+		$label = "",
+		$placeholder = "",
+		$exclude = [],
+		$include = [],
+		$messages = []
+	)
 	{
 		$selectParams = array("isMulti" => false);
 
@@ -341,18 +350,54 @@ class Field
 			);
 		}
 
-		$field = array(
+		$subtypes = [];
+		$sourceSubtypes = NumberType::getList();
+
+		foreach ($sourceSubtypes as $key => $subtype)
+		{
+			if (!is_array($exclude) || !in_array($subtype, $exclude))
+			{
+				$subtypes[] = [
+					"NAME" => static::getMessage($messages, "MAIN_UI_FILTER__NUMBER_".$key),
+					"VALUE" => $subtype,
+				];
+
+				if ($subtype == $type)
+				{
+					$subtypeType = [
+						"NAME" => static::getMessage($messages, "MAIN_UI_FILTER__NUMBER_".$key),
+						"VALUE" => $subtype,
+					];
+				}
+			}
+		}
+
+		if (is_array($include))
+		{
+			$additionalSubtypes = AdditionalNumberType::getList();
+			foreach ($additionalSubtypes as $key => $subtype)
+			{
+				if (in_array($subtype, $include))
+				{
+					$subtypes[] = [
+						"NAME" => static::getMessage($messages, "MAIN_UI_FILTER__NUMBER_".$key),
+						"VALUE" => $subtype,
+					];
+				}
+			}
+		}
+
+		return [
 			"ID" => "field_".$name,
 			"TYPE" => Type::NUMBER,
 			"NAME" => $name,
-			"SUB_TYPE" => $type,
+			"SUB_TYPE" => $subtypeType,
+			"SUB_TYPES" => $subtypes,
 			"VALUES" => $values,
 			"LABEL" => $label,
 			"PLACEHOLDER" => $placeholder,
 			"SELECT_PARAMS" => $selectParams
-		);
-
-		return $field;
+		];
 	}
 
 
@@ -370,7 +415,7 @@ class Field
 		if (empty($defaultValue) && count($items))
 		{
 			$defaultValue["NAME"] = $items[0]["NAME"];
-			$defaultValue["VALUE"] = $items[0]["VALUE"];
+			$defaultValue["VALUE"] = $items[0]["VALUE"] ?? null;
 		}
 
 		$field = array(
@@ -609,7 +654,7 @@ class Field
 				'multiple' => ($multiple ? 'Y' : 'N'),
 				'eventInit' => 'BX.Filter.DestinationSelector:openInit',
 				'eventOpen' => 'BX.Filter.DestinationSelector:open',
-				'context' => (isset($params['context']) ? $params['context'] : 'FILTER_'.$name),
+				'context' => ($params['context'] ?? 'FILTER_'.$name),
 				'popupAutoHide' => 'N',
 				'useSearch' => 'N',
 				'userNameTemplate' => \CUtil::jSEscape(\CSite::getNameFormat()),
@@ -657,7 +702,7 @@ class Field
 					'ID' => $name,
 					'ITEMS_SELECTED' => array(),
 					'CALLBACK' => array(
-						'select' => 'BX.Filter.DestinationSelectorManager.onSelect.bind(null, \''.(isset($params['isNumeric']) && $params['isNumeric'] == 'Y' ? 'Y' : 'N').'\', \''.(isset($params['prefix']) ? $params['prefix'] : '').'\')',
+						'select' => 'BX.Filter.DestinationSelectorManager.onSelect.bind(null, \''.(isset($params['isNumeric']) && $params['isNumeric'] == 'Y' ? 'Y' : 'N').'\', \''.($params['prefix'] ?? '').'\')',
 						'unSelect' => '',
 						'openDialog' => 'BX.Filter.DestinationSelectorManager.onDialogOpen',
 						'closeDialog' => 'BX.Filter.DestinationSelectorManager.onDialogClose',

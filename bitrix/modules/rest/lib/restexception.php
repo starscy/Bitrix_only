@@ -11,6 +11,7 @@ class RestException
 
 	const ERROR_OAUTH = 'ERROR_OAUTH';
 	const ERROR_METHOD_NOT_FOUND = 'ERROR_METHOD_NOT_FOUND';
+	const ERROR_OPERATION_TIME_LIMIT = 'OPERATION_TIME_LIMIT';
 	const ERROR_CORE = 'ERROR_CORE';
 	const ERROR_ARGUMENT = 'ERROR_ARGUMENT';
 	const ERROR_NOT_FOUND = 'ERROR_NOT_FOUND';
@@ -23,6 +24,8 @@ class RestException
 	{
 		$this->status = $status;
 		$this->error_code = $code;
+		$message = strval($message);
+
 		parent::__construct($message, intval($code), $previous);
 	}
 

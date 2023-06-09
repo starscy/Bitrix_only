@@ -131,7 +131,7 @@ class Access
 							$entity = $appInfo['CODE'];
 						}
 
-						$entityList = static::getActiveEntity();
+						$entityList = static::getActiveEntity(true);
 						if ($entityList[static::ENTITY_COUNT] > $maxCount)
 						{
 							static::$availableAppCount[$key] = false;
@@ -575,7 +575,7 @@ class Access
 	{
 		static::reset();
 		if (
-			!static::isActiveRules()
+			!Client::isSubscriptionAccess()
 			&& Loader::includeModule('bitrix24')
 			&& in_array($licenseType, \CBitrix24::PAID_EDITIONS, true)
 		)

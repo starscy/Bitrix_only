@@ -92,7 +92,7 @@ abstract class ElementList extends Base
 
 		$params['PAGE_ELEMENT_COUNT'] = (int)$params['PAGE_ELEMENT_COUNT'];
 		$params['ELEMENT_COUNT'] = (int)($params['ELEMENT_COUNT'] ?? 0);
-		$params['LINE_ELEMENT_COUNT'] = (int)$params['LINE_ELEMENT_COUNT'];
+		$params['LINE_ELEMENT_COUNT'] = (int)($params['LINE_ELEMENT_COUNT'] ?? 3);
 
 		if (!isset($params['INCLUDE_SUBSECTIONS']) || !in_array($params['INCLUDE_SUBSECTIONS'], array('Y', 'A', 'N')))
 		{
@@ -125,6 +125,7 @@ abstract class ElementList extends Base
 			if (
 				!empty($params['FILTER_NAME'])
 				&& preg_match(self::PARAM_TITLE_MASK, $params['FILTER_NAME'])
+				&& isset($GLOBALS[$params['FILTER_NAME']])
 				&& is_array($GLOBALS[$params['FILTER_NAME']])
 			)
 			{
@@ -140,8 +141,23 @@ abstract class ElementList extends Base
 			$this->arResult['ORIGINAL_PARAMETERS']['GLOBAL_FILTER'] = $this->globalFilter;
 		}
 
+		$productMappingFilter = [];
+		if (
+			Loader::includeModule('catalog')
+			&& Catalog\Product\SystemField\ProductMapping::isAllowed()
+		)
+		{
+			$productMappingFilter = Catalog\Product\SystemField\ProductMapping::getExtendedFilterByArea(
+				[],
+				Catalog\Product\SystemField\ProductMapping::MAP_LANDING
+			);
+		}
 		$params['CACHE_FILTER'] = isset($params['CACHE_FILTER']) && $params['CACHE_FILTER'] === 'Y';
-		if (!$params['CACHE_FILTER'] && !empty($this->globalFilter))
+		if (
+			!$params['CACHE_FILTER']
+			&& !empty($this->globalFilter)
+			&& array_diff_assoc($this->globalFilter, $productMappingFilter)
+		)
 		{
 			$params['CACHE_TIME'] = 0;
 		}
@@ -158,9 +174,12 @@ abstract class ElementList extends Base
 			['ORDER' => 'ID', 'DIRECTION' => 'desc']
 		);
 
+		$params['PAGER_BASE_LINK_ENABLE'] = (string)($params['PAGER_BASE_LINK_ENABLE'] ?? '');
+		$params['PAGER_TITLE'] = (string)($params['PAGER_TITLE'] ?? '');
+		$params['PAGER_TEMPLATE'] = (string)($params['PAGER_TEMPLATE'] ?? '');
 		if (!empty($params['PAGER_PARAMS_NAME']) && preg_match(self::PARAM_TITLE_MASK, $params['PAGER_PARAMS_NAME']))
 		{
-			$this->pagerParameters = $GLOBALS[$params['PAGER_PARAMS_NAME']];
+			$this->pagerParameters = $GLOBALS[$params['PAGER_PARAMS_NAME']] ?? [];
 
 			if (!is_array($this->pagerParameters))
 			{
@@ -622,8 +641,11 @@ abstract class ElementList extends Base
 	protected function isEmptyStartLoad(): bool
 	{
 		return (
-			$this->arParams['LAZY_LOAD'] === 'Y'
+			isset($this->arParams['LAZY_LOAD'])
+			&& $this->arParams['LAZY_LOAD'] === 'Y'
+			&& isset($this->arParams['LOAD_ON_SCROLL'])
 			&& $this->arParams['LOAD_ON_SCROLL'] === 'Y'
+			&& isset($this->arParams['DEFERRED_LOAD'])
 			&& $this->arParams['DEFERRED_LOAD'] === 'Y'
 		);
 	}
@@ -928,6 +950,7 @@ abstract class ElementList extends Base
 								if (
 									($isArr && !empty($prop['VALUE']))
 									|| (!$isArr && (string)$prop['VALUE'] !== '')
+									|| Tools::isCheckboxProperty($prop)
 								)
 								{
 									$element['DISPLAY_PROPERTIES'][$pid] = \CIBlockFormatProperties::GetDisplayValue($element, $prop, 'catalog_out');
@@ -1363,12 +1386,6 @@ abstract class ElementList extends Base
 		parent::prepareTemplateParams();
 		$params =& $this->arParams;
 
-		if (!isset($params['LINE_ELEMENT_COUNT']))
-		{
-			$params['LINE_ELEMENT_COUNT'] = 3;
-		}
-
-		$params['LINE_ELEMENT_COUNT'] = (int)$params['LINE_ELEMENT_COUNT'];
 		if ($params['LINE_ELEMENT_COUNT'] < 2)
 		{
 			$params['LINE_ELEMENT_COUNT'] = 2;
@@ -1703,7 +1720,7 @@ abstract class ElementList extends Base
 
 		if ($this->isPaginationMode())
 		{
-			if (is_array($this->arResult['NAV_PARAM']))
+			if (isset($this->arResult['NAV_PARAM']) && is_array($this->arResult['NAV_PARAM']))
 			{
 				$this->arResult['NAV_PARAM']['TEMPLATE_THEME'] = $this->arParams['TEMPLATE_THEME'];
 			}
@@ -1751,6 +1768,7 @@ abstract class ElementList extends Base
 			$this->sortItemsByTemplateVariants();
 		}
 
+		$this->arResult['BIG_DATA'] = [];
 		if ($this->request->getRequestMethod() === 'GET')
 		{
 			$this->arResult['BIG_DATA'] = $this->getBigDataInfo();

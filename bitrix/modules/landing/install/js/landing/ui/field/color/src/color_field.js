@@ -150,6 +150,12 @@ export class ColorField extends BaseField
 		return this.processor.getVariableName();
 	}
 
+	prepareInlineProperties(props): [string]
+	{
+		props.push('background-image');
+		return props;
+	}
+
 	getComputedProperties(): [string]
 	{
 		return this.processor.getProperty();
@@ -189,7 +195,7 @@ export class ColorField extends BaseField
 	{
 		let processorValue = null;
 		// now for multiple properties get just last value. Maybe, need object-like values
-		this.getInlineProperties().forEach(prop => {
+		this.prepareInlineProperties(this.getInlineProperties()).forEach(prop => {
 			if (prop in value && !this.processor.isNullValue(value[prop]))
 			{
 				if (!Type.isObject(processorValue))
@@ -212,6 +218,7 @@ export class ColorField extends BaseField
 			}
 		});
 
+		processorValue = this.processor.prepareProcessorValue(processorValue, defaultValue);
 		if (processorValue !== null)
 		{
 			this.processor.setProcessorValue(processorValue);
@@ -226,7 +233,6 @@ export class ColorField extends BaseField
 	onFrameLoad()
 	{
 		// todo: now not work with "group select", can use just any node from elements. If group - need forEach
-
 		const value = this.data.styleNode.getValue(true);
 		this.setValue(value.style);
 	}

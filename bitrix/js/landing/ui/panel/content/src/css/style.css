@@ -7,6 +7,7 @@
 	right: 0;
 	z-index: 319;
 	opacity: 0;
+	margin-top: 65px;
 }
 
 .landing-ui-panel-content-overlay.landing-ui-show {
@@ -37,6 +38,19 @@
 	/*box-shadow: 0 0 16px 0 rgba(0,0,0,.1);*/  /* chrome have bug with box shadow, see 0145815 */
 	transform: translateX(-100%);
 	opacity: 0;
+	margin-top: 65px;
+}
+
+.landing-ui-panel-fields,
+.landing-ui-panel-separator,
+.landing-ui-panel-form-settings {
+	margin-top: 0;
+}
+
+main.landing-edit-mode .landing-ui-panel-content
+{
+	font-weight: normal;
+	line-height: 1.6;
 }
 
 .landing-ui-panel-show-from-right.landing-ui-panel-content {
@@ -47,6 +61,7 @@
 
 .landing-ui-panel.landing-ui-panel-link {
 	z-index: 333;
+	margin-top: 65px;
 }
 
 .landing-ui-panel-link.landing-ui-panel-content-overlay {
@@ -169,9 +184,9 @@
 }
 
 .landing-ui-panel-content-title {
-	font-family: 'OpenSans-Light', Helvetica, Arial, sans-serif;
+	font-family: var(--ui-font-family-secondary, var(--ui-font-family-open-sans));
+	font-weight: var(--ui-font-weight-light, 300);
 	font-size: 24px;
-	font-weight: 400;
 	color: #000000;
 	margin: 10px 33px 0 30px;
 	white-space: nowrap;
@@ -181,7 +196,7 @@
 
 
 .landing-ui-panel-content-subtitle {
-	font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+	font-family: var(--ui-font-family-primary, var(--ui-font-family-helvetica));
 	font-size: 12px;
 	position: relative;
 	top: -4px;
@@ -234,6 +249,7 @@
 	transform: translateZ(0);
 	border-top: 20px transparent solid;
 	border-bottom: 20px transparent solid;
+	border-radius: var(--ui-border-radius-md);
 }
 
 .landing-ui-panel-content-body-sidebar:empty {
@@ -250,7 +266,7 @@
 	padding-right: 20px;
 	border-top: 20px transparent solid;
 	border-bottom: 20px transparent solid;
-	border-right: 7px transparent solid;
+	border-radius: var(--ui-border-radius-md);
 }
 
 
@@ -284,6 +300,33 @@
 	display: none!important;
 }
 
+.landing-ui-external-controls .landing-ui-panel-content-action,
+.landing-ui-external-controls .landing-ui-panel-block-action {
+	display: none!important;
+}
+
 .landing-ui-panel-show-from-right .landing-ui-panel-content-close {
 	display: none;
+}
+
+.landing-ui-action-panels-disable-scrollbar {
+	overflow: hidden;
+}
+
+.landing-ui-panel-highlight {
+	position: relative;
+}
+
+.landing-ui-panel-highlight::before {
+	position: absolute;
+	top: -20px;
+	bottom: -20px;
+	right: -20px;
+	left: -20px;
+	content: '';
+	background: rgba(187, 237, 33, .2);
+}
+
+.landing-ui-panel.landing-ui-hide .landing-ui-panel-content-body-content {
+	overflow-y: hidden;
 }

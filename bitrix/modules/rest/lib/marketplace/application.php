@@ -22,6 +22,17 @@ Loc::loadMessages(__FILE__);
 
 class Application
 {
+	/**
+	 * Id of user on whose behalf are the actions do. If not set - use current system user
+	 * @var null
+	 */
+	protected static ?int $contextUserId = null;
+
+	public static function setContextUserId(int $id): void
+	{
+		self::$contextUserId = $id;
+	}
+
 	public static function install($code, $version = false, $checkHash = false, $installHash = false, $from = null) : array
 	{
 		$result = [];
@@ -37,7 +48,7 @@ class Application
 			{
 				$result = [
 					'error' => $e->getCode(),
-					'error_description' => $e->getMessage()
+					'errorDescription' => $e->getMessage(),
 				];
 			}
 		}
@@ -47,7 +58,8 @@ class Application
 			$version = !empty($version) ? $version : false;
 
 			$result = [
-				'error' => Loc::getMessage('RMP_INSTALL_ERROR')
+				'error' => 'INSTALL_ERROR',
+				'errorDescription' => Loc::getMessage('RMP_INSTALL_ERROR'),
 			];
 
 			$appDetailInfo = false;
@@ -77,13 +89,14 @@ class Application
 			)
 			{
 				$result = [
-					'error' => Loc::getMessage('RMP_ERROR_ACCESS_DENIED'),
+					'error' => 'ACTION_ACCESS_DENIED',
+					'errorDescription' => Loc::getMessage('RMP_ERROR_ACCESS_DENIED'),
 					'helperCode' => Access::getHelperCode(Access::ACTION_INSTALL, Access::ENTITY_TYPE_APP, $appDetailInfo)
 				];
 			}
 			elseif ($appDetailInfo)
 			{
-				if (CRestUtil::canInstallApplication($appDetailInfo))
+				if (CRestUtil::canInstallApplication($appDetailInfo, self::$contextUserId))
 				{
 					$queryFields = [
 						'CLIENT_ID' => $appDetailInfo['APP_CODE'],
@@ -91,7 +104,7 @@ class Application
 						'BY_SUBSCRIPTION' => $appDetailInfo['BY_SUBSCRIPTION'] === 'Y' ? 'Y' : 'N',
 					];
 
-					if (isset($checkHash, $installHash))
+					if (!empty($checkHash) && !empty($installHash))
 					{
 						$queryFields['CHECK_HASH'] = $checkHash;
 						$queryFields['INSTALL_HASH'] = $installHash;
@@ -125,7 +138,8 @@ class Application
 
 					if ($installResult['error'])
 					{
-						$result['error_description'] = $installResult['error'] . ': ' . $installResult['error_description'];
+						$result['error'] = $installResult['error'];
+						$result['errorDescription'] = $installResult['error_description'];
 					}
 					elseif ($installResult['result'])
 					{
@@ -198,7 +212,7 @@ class Application
 								AppLogTable::log($appId, AppLogTable::ACTION_TYPE_INSTALL);
 							}
 
-							if (!CRestUtil::isAdmin())
+							if (!CRestUtil::isAdmin(self::$contextUserId))
 							{
 								CRestUtil::notifyInstall($appFields);
 							}
@@ -287,23 +301,44 @@ class Application
 						}
 						else
 						{
-							$result['error_description'] = implode('<br />', $addResult->getErrorMessages());
+							$result['errorDescription'] = implode('<br />', $addResult->getErrorMessages());
 						}
 					}
 				}
 				else
 				{
-					$result = ['error' => Loc::getMessage('RMP_ACCESS_DENIED')];
+					$result = [
+						'error' => 'ACCESS_DENIED',
+						'errorDescription' => Loc::getMessage('RMP_ACCESS_DENIED'),
+					];
 				}
 			}
 			else
 			{
-				$result = ['error' => Loc::getMessage('RMP_NOT_FOUND')];
+				$result = [
+					'error' => 'APPLICATION_NOT_FOUND',
+					'errorDescription' => Loc::getMessage('RMP_NOT_FOUND'),
+				];
 			}
 		}
 		elseif (!$result['error'])
 		{
-			$result = ['error' => Loc::getMessage('RMP_INSTALL_ERROR')];
+			$result = [
+				'error' => 'OAUTH_REGISTER',
+				'errorDescription' => Loc::getMessage('RMP_INSTALL_ERROR'),
+			];
+		}
+
+		if ($result['error'])
+		{
+			if ($result['error'] === 'SUBSCRIPTION_REQUIRED')
+			{
+				$result['errorDescription'] = Loc::getMessage('RMP_ERROR_SUBSCRIPTION_REQUIRED');
+			}
+			elseif ($result['error'] === 'verification_needed')
+			{
+				$result['errorDescription'] = Loc::getMessage('RMP_ERROR_VERIFICATION_NEEDED');
+			}
 		}
 
 		return $result;
@@ -311,7 +346,7 @@ class Application
 
 	public static function uninstall($code, bool $clean = false, $from = null) : array
 	{
-		if (CRestUtil::isAdmin())
+		if (CRestUtil::isAdmin(self::$contextUserId))
 		{
 			$res = AppTable::getList(
 				[
@@ -388,7 +423,7 @@ class Application
 	public static function reinstall($id) : array
 	{
 		$result = [];
-		if (CRestUtil::isAdmin())
+		if (CRestUtil::isAdmin(self::$contextUserId))
 		{
 			$appInfo = AppTable::getByClientId($id);
 			if (
@@ -438,6 +473,7 @@ class Application
 	public static function setRights($appId, $rights) : array
 	{
 		$result = [];
+		// todo: maybe can add self::$contextUser to isAdmin check
 		if (CRestUtil::isAdmin())
 		{
 			if ($appId > 0)
@@ -466,6 +502,7 @@ class Application
 
 	public static function getRights($appId)
 	{
+		// todo: maybe can add self::$contextUser to isAdmin check
 		if (CRestUtil::isAdmin())
 		{
 			if ($appId > 0)

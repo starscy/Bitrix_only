@@ -17,7 +17,13 @@ use Bitrix\Main\Web\Json;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\UI\FileInput;
 Loc::loadMessages(__FILE__);
-Extension::load(["ui.buttons", "ui.common", "ui.notification"]);
+Extension::load([
+	"ui.design-tokens",
+	"ui.fonts.opensans",
+	"ui.buttons",
+	"ui.common",
+	"ui.notification",
+]);
 $containerId = 'rest-configuration-import';
 
 $bodyClass = $APPLICATION->getPageProperty("BodyClass", false);
@@ -44,6 +50,10 @@ else
 	{
 		$titleBlock = Loc::getMessage('REST_CONFIGURATION_IMPORT_TITLE_BLOCK');
 	}
+	if (isset($_GET['createType']) && $_GET['createType'] === 'PAGE')
+	{
+		$titleBlock = Loc::getMessage('REST_CONFIGURATION_IMPORT_PAGE_TITLE');
+	}
 }
 
 ?>
@@ -52,7 +62,14 @@ else
 		<? if (!empty($titleBlock)):?>
 			<div class="rest-configuration-title"><?=htmlspecialcharsbx($titleBlock)?></div>
 		<? endif;?>
-		<? if($arResult['IMPORT_ACCESS'] === true):?>
+		<? if (!empty($arResult['ERRORS_UPLOAD_FILE'])):?>
+			<div class="rest-configuration-start-icon-main rest-configuration-start-icon-main-error">
+				<div class="rest-configuration-start-icon-refresh"></div>
+				<div class="rest-configuration-start-icon"></div>
+				<div class="rest-configuration-start-icon-circle"></div>
+			</div>
+			<p class="rest-configuration-info"><?=htmlspecialcharsbx($arResult['ERRORS_UPLOAD_FILE'])?></p>
+		<? elseif($arResult['IMPORT_ACCESS'] === true):?>
 			<? if($arParams['MODE'] == 'ROLLBACK'):?>
 				<? if(!empty($arResult['IMPORT_FOLDER_FILES'])):?>
 					<?php
@@ -65,7 +82,8 @@ else
 							'APP' => $arResult['APP'],
 							'MODE' => $arParams['MODE'],
 							'MANIFEST_CODE' => $arResult['MANIFEST_CODE'],
-							'UNINSTALL_APP_ON_FINISH' => $arResult['UNINSTALL_APP_ON_FINISH']
+							'UNINSTALL_APP_ON_FINISH' => $arResult['UNINSTALL_APP_ON_FINISH'],
+							'FROM' => $arResult['FROM'],
 						),
 						$component,
 						array('HIDE_ICONS' => 'Y')
@@ -82,7 +100,8 @@ else
 							'MODE' => $arParams['MODE'],
 							'MANIFEST_CODE' => $arResult['MANIFEST_CODE'],
 							'IMPORT_MANIFEST' => $arResult['IMPORT_MANIFEST_FILE'],
-							'UNINSTALL_APP_ON_FINISH' => $arResult['UNINSTALL_APP_ON_FINISH']
+							'UNINSTALL_APP_ON_FINISH' => $arResult['UNINSTALL_APP_ON_FINISH'],
+							'FROM' => $arResult['FROM'],
 						),
 						$component,
 						array('HIDE_ICONS' => 'Y')
@@ -123,6 +142,7 @@ else
 						'PROCESS_ID' => $arResult['IMPORT_PROCESS_ID'],
 						'MANIFEST_CODE' => $arResult['MANIFEST_CODE'],
 						'APP' => $arResult['APP'],
+						'FROM' => $arResult['FROM'],
 					),
 					$component,
 					array(
@@ -140,6 +160,7 @@ else
 						'IMPORT_MANIFEST' => $arResult['IMPORT_MANIFEST_FILE'],
 						'MANIFEST_CODE' => $arResult['MANIFEST_CODE'],
 						'APP' => $arResult['APP'],
+						'FROM' => $arResult['FROM'],
 					),
 					$component,
 					array(
@@ -181,6 +202,7 @@ else
 				array(
 					'APP_CODE' => $arResult['INSTALL_APP'],
 					'IFRAME' => 'Y',
+					'FROM' => $arResult['FROM'],
 				),
 				$component,
 				array('HIDE_ICONS' => 'Y')

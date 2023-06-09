@@ -23,6 +23,8 @@ Loc::loadMessages(__FILE__);
 
 Extension::load(
 	[
+		'ui.design-tokens',
+		'ui.fonts.opensans',
 		'ui.buttons',
 		'ui.alerts',
 		'marketplace',
@@ -48,11 +50,13 @@ if (
 
 				if (!!result.open)
 				{
+					BX.SidePanel.Instance.isReload = true;
 					BX.SidePanel.Instance.reload();
 					top.BX.rest.AppLayout.openApplication(result.id, {});
 				}
 				else
 				{
+					BX.SidePanel.Instance.isReload = true;
 					BX.SidePanel.Instance.reload();
 				}
 			}

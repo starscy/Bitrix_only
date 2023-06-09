@@ -1,4 +1,5 @@
 <?
+
 use \Bitrix\Main;
 use \Bitrix\Main\Loader;
 use \Bitrix\Main\Error;
@@ -36,23 +37,6 @@ class CatalogSectionComponent extends ElementList
 	{
 		$params = parent::onPrepareComponentParams($params);
 
-		if (
-			empty($this->globalFilter)
-			&& !empty($params['EXTERNAL_PRODUCT_IDS'])
-			&& is_array($params['EXTERNAL_PRODUCT_IDS'])
-		)
-		{
-			$params['EXTERNAL_PRODUCT_MAP'] = static::getProductsMap($params['EXTERNAL_PRODUCT_IDS']);
-			if (!empty($params['EXTERNAL_PRODUCT_MAP']))
-			{
-				$this->globalFilter = [
-					'ID' => array_unique(array_values($params['EXTERNAL_PRODUCT_MAP']))
-				];
-			}
-		}
-
-		unset($params['EXTERNAL_PRODUCT_IDS']);
-
 		$params['IBLOCK_TYPE'] = isset($params['IBLOCK_TYPE']) ? trim($params['IBLOCK_TYPE']) : '';
 
 		if ((int)$params['SECTION_ID'] > 0 && (int)$params['SECTION_ID'].'' != $params['SECTION_ID'] && Loader::includeModule('iblock'))
@@ -83,7 +67,7 @@ class CatalogSectionComponent extends ElementList
 
 		$params['CUSTOM_CURRENT_PAGE'] = isset($params['CUSTOM_CURRENT_PAGE']) ? trim($params['CUSTOM_CURRENT_PAGE']) : '';
 
-		$params['COMPATIBLE_MODE'] = (isset($params['COMPATIBLE_MODE']) && $params['COMPATIBLE_MODE'] === 'N' ? 'N' : 'Y');
+		$params['COMPATIBLE_MODE'] = ($params['COMPATIBLE_MODE'] ?? 'N') === 'Y' ? 'Y' : 'N';
 		if ($params['COMPATIBLE_MODE'] === 'N')
 		{
 			$params['DISABLE_INIT_JS_IN_COMPONENT'] = 'Y';
@@ -98,6 +82,17 @@ class CatalogSectionComponent extends ElementList
 		{
 			CJSCore::Init(array('popup'));
 		}
+
+		$params['HIDE_SECTION_DESCRIPTION'] = (string)($params['HIDE_SECTION_DESCRIPTION'] ?? 'N');
+		if ($params['HIDE_SECTION_DESCRIPTION'] !== 'Y')
+		{
+			$params['HIDE_SECTION_DESCRIPTION'] = 'N';
+		}
+
+		$params['META_KEYWORDS'] = (string)($params['META_KEYWORDS'] ?? '');
+		$params['META_DESCRIPTION'] = (string)($params['META_DESCRIPTION'] ?? '');
+		$params['BROWSER_TITLE'] = (string)($params['BROWSER_TITLE'] ?? '');
+		$params['BACKGROUND_IMAGE'] = (string)($params['BACKGROUND_IMAGE'] ?? '');
 
 		return $params;
 	}
@@ -116,35 +111,38 @@ class CatalogSectionComponent extends ElementList
 		$success = true;
 		$selectFields = array();
 
-		if (!empty($this->arParams['SECTION_USER_FIELDS']) && is_array($this->arParams['SECTION_USER_FIELDS']))
+		if ($this->arParams['IBLOCK_ID'] > 0)
 		{
-			foreach ($this->arParams['SECTION_USER_FIELDS'] as $field)
+			if (!empty($this->arParams['SECTION_USER_FIELDS']) && is_array($this->arParams['SECTION_USER_FIELDS']))
 			{
-				if (is_string($field) && preg_match('/^UF_/', $field))
+				foreach ($this->arParams['SECTION_USER_FIELDS'] as $field)
 				{
-					$selectFields[] = $field;
+					if (is_string($field) && preg_match('/^UF_/', $field))
+					{
+						$selectFields[] = $field;
+					}
 				}
 			}
-		}
 
-		if (preg_match('/^UF_/', $this->arParams['META_KEYWORDS']))
-		{
-			$selectFields[] = $this->arParams['META_KEYWORDS'];
-		}
+			if (preg_match('/^UF_/', $this->arParams['META_KEYWORDS']))
+			{
+				$selectFields[] = $this->arParams['META_KEYWORDS'];
+			}
 
-		if (preg_match('/^UF_/', $this->arParams['META_DESCRIPTION']))
-		{
-			$selectFields[] = $this->arParams['META_DESCRIPTION'];
-		}
+			if (preg_match('/^UF_/', $this->arParams['META_DESCRIPTION']))
+			{
+				$selectFields[] = $this->arParams['META_DESCRIPTION'];
+			}
 
-		if (preg_match('/^UF_/', $this->arParams['BROWSER_TITLE']))
-		{
-			$selectFields[] = $this->arParams['BROWSER_TITLE'];
-		}
+			if (preg_match('/^UF_/', $this->arParams['BROWSER_TITLE']))
+			{
+				$selectFields[] = $this->arParams['BROWSER_TITLE'];
+			}
 
-		if (preg_match('/^UF_/', $this->arParams['BACKGROUND_IMAGE']))
-		{
-			$selectFields[] = $this->arParams['BACKGROUND_IMAGE'];
+			if (preg_match('/^UF_/', $this->arParams['BACKGROUND_IMAGE']))
+			{
+				$selectFields[] = $this->arParams['BACKGROUND_IMAGE'];
+			}
 		}
 
 		$filterFields = array(
@@ -341,58 +339,6 @@ class CatalogSectionComponent extends ElementList
 		return $filterFields;
 	}
 
-	protected function editTemplateItems(&$items)
-	{
-		$items = $this->prepareItemsByExternalProductMap($items);
-		parent::editTemplateItems($items);
-	}
-
-	protected function prepareItemsByExternalProductMap(array $items): array
-	{
-		if (!empty($this->arParams['EXTERNAL_PRODUCT_MAP']) && is_array($this->arParams['EXTERNAL_PRODUCT_MAP']))
-		{
-			$itemsByProductId = array_column($items, null, 'ID');
-			$newItems = [];
-
-			foreach ($this->arParams['EXTERNAL_PRODUCT_MAP'] as $offerId => $productId)
-			{
-				$nextItem = $itemsByProductId[$productId] ?? null;
-				if ($nextItem === null)
-				{
-					continue;
-				}
-
-				// offer id not specified
-				if ($offerId === $productId)
-				{
-					$found = true;
-				}
-				else
-				{
-					$found = false;
-					foreach ($nextItem['OFFERS'] as $offer)
-					{
-						if ($offer['ID'] === $offerId)
-						{
-							$nextItem['OFFER_ID_SELECTED'] = $offerId;
-							$found = true;
-							break;
-						}
-					}
-				}
-
-				if ($found)
-				{
-					$newItems[] = $nextItem;
-				}
-			}
-
-			$items = $newItems;
-		}
-
-		return $items;
-	}
-
 	protected function makeOutputResult()
 	{
 		parent::makeOutputResult();
@@ -406,7 +352,7 @@ class CatalogSectionComponent extends ElementList
 		if (!$this->hasErrors())
 		{
 			$this->initAdminIconsPanel();
-			$this->setTemplateCachedData($this->arResult['NAV_CACHED_DATA']);
+			$this->setTemplateCachedData($this->arResult['NAV_CACHED_DATA'] ?? '');
 			$this->initMetaData();
 		}
 	}
@@ -415,6 +361,8 @@ class CatalogSectionComponent extends ElementList
 	{
 		global $APPLICATION, $INTRANET_TOOLBAR, $USER;
 
+		$this->storage['TITLE_OPTIONS'] = null;
+
 		if (!$USER->IsAuthorized())
 		{
 			return;
@@ -422,9 +370,15 @@ class CatalogSectionComponent extends ElementList
 
 		$arResult =& $this->arResult;
 
+		$intranetToolbarEnable =
+			($this->arParams['INTRANET_TOOLBAR'] ?? '') !== 'N'
+			&& isset($INTRANET_TOOLBAR)
+			&& is_object($INTRANET_TOOLBAR)
+		;
+
 		if (
 			$APPLICATION->GetShowIncludeAreas()
-			|| (is_object($INTRANET_TOOLBAR) && $this->arParams['INTRANET_TOOLBAR'] !== 'N')
+			|| $intranetToolbarEnable
 			|| $this->arParams['SET_TITLE']
 			|| isset($arResult[$this->arParams['BROWSER_TITLE']])
 		)
@@ -484,9 +438,9 @@ class CatalogSectionComponent extends ElementList
 				}
 
 				if (
-					is_array($buttons['intranet'])
-					&& is_object($INTRANET_TOOLBAR)
-					&& $this->arParams['INTRANET_TOOLBAR'] !== 'N'
+					isset($buttons['intranet'])
+					&& is_array($buttons['intranet'])
+					&& $intranetToolbarEnable
 				)
 				{
 					Main\Page\Asset::getInstance()->addJs('/bitrix/js/main/utils.js');
@@ -501,11 +455,11 @@ class CatalogSectionComponent extends ElementList
 				{
 					if (isset($buttons['submenu']['edit_section']))
 					{
-						$this->storage['TITLE_OPTIONS'] = array(
+						$this->storage['TITLE_OPTIONS'] = [
 							'ADMIN_EDIT_LINK' => $buttons['submenu']['edit_section']['ACTION'],
 							'PUBLIC_EDIT_LINK' => $buttons['edit']['edit_section']['ACTION'],
 							'COMPONENT_NAME' => $this->getName(),
-						);
+						];
 					}
 				}
 			}
@@ -518,7 +472,10 @@ class CatalogSectionComponent extends ElementList
 
 		if ($this->arParams['SET_TITLE'])
 		{
-			if (isset($this->arResult['IPROPERTY_VALUES']['SECTION_PAGE_TITLE']) && $this->arResult['IPROPERTY_VALUES']['SECTION_PAGE_TITLE'] != '')
+			if (
+				isset($this->arResult['IPROPERTY_VALUES']['SECTION_PAGE_TITLE'])
+				&& $this->arResult['IPROPERTY_VALUES']['SECTION_PAGE_TITLE'] !== ''
+			)
 			{
 				$APPLICATION->SetTitle($this->arResult['IPROPERTY_VALUES']['SECTION_PAGE_TITLE'], $this->storage['TITLE_OPTIONS']);
 			}
@@ -584,11 +541,18 @@ class CatalogSectionComponent extends ElementList
 			);
 		}
 
-		if ($this->arParams['ADD_SECTIONS_CHAIN'] && is_array($this->arResult['PATH']))
+		if (
+			$this->arParams['ADD_SECTIONS_CHAIN']
+			&& isset($this->arResult['PATH'])
+			&& is_array($this->arResult['PATH'])
+		)
 		{
 			foreach ($this->arResult['PATH'] as $path)
 			{
-				if ($path['IPROPERTY_VALUES']['SECTION_PAGE_TITLE'] != '')
+				if (
+					isset($path['IPROPERTY_VALUES']['SECTION_PAGE_TITLE'])
+					&& $path['IPROPERTY_VALUES']['SECTION_PAGE_TITLE'] !== ''
+				)
 				{
 					$APPLICATION->AddChainItem($path['IPROPERTY_VALUES']['SECTION_PAGE_TITLE'], $path['~SECTION_PAGE_URL']);
 				}

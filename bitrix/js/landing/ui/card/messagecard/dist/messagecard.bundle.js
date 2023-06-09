@@ -1,7 +1,7 @@
 this.BX = this.BX || {};
 this.BX.Landing = this.BX.Landing || {};
 this.BX.Landing.UI = this.BX.Landing.UI || {};
-(function (exports,main_core,landing_ui_card_basecard,landing_loc) {
+(function (exports,ui_designTokens,ui_fonts_opensans,main_core,landing_ui_card_basecard,landing_loc) {
 	'use strict';
 
 	var _templateObject, _templateObject2, _templateObject3, _templateObject4, _templateObject5, _templateObject6, _templateObject7, _templateObject8;
@@ -100,7 +100,7 @@ this.BX.Landing.UI = this.BX.Landing.UI || {};
 	      var _this5 = this;
 
 	      return this.cache.remember('closeButton', function () {
-	        return main_core.Tag.render(_templateObject4 || (_templateObject4 = babelHelpers.taggedTemplateLiteral(["\n\t\t\t\t<div \n\t\t\t\t\tclass=\"landing-ui-card-message-close-button\" \n\t\t\t\t\tonclick=\"", "\"\n\t\t\t\t\ttitle=\"", "\"\n\t\t\t\t></div>\n\t\t\t"])), _this5.onCloseClick, landing_loc.Loc.getMessage('LANDING_MESSAGE_CARD_HIDE'));
+	        return main_core.Tag.render(_templateObject4 || (_templateObject4 = babelHelpers.taggedTemplateLiteral(["\n\t\t\t\t<div \n\t\t\t\t\tclass=\"landing-ui-card-message-close-button\" \n\t\t\t\t\tonclick=\"", "\"\n\t\t\t\t\ttitle=\"", "\"\n\t\t\t\t></div>\n\t\t\t"])), _this5.onCloseClick, landing_loc.Loc.getMessage('LANDING_MESSAGE_CARD_HIDE_MSGVER_1'));
 	      });
 	    }
 	  }, {
@@ -128,7 +128,7 @@ this.BX.Landing.UI = this.BX.Landing.UI || {};
 	      var _this7 = this;
 
 	      return this.cache.remember('closeLink', function () {
-	        return main_core.Tag.render(_templateObject6 || (_templateObject6 = babelHelpers.taggedTemplateLiteral(["\n\t\t\t\t<span class=\"ui-link ui-link-secondary ui-link-dashed landing-ui-card-message-close-link\" onclick=\"", "\">\n\t\t\t\t\t", "\n\t\t\t\t</span>\n\t\t\t"])), _this7.onCloseClick, landing_loc.Loc.getMessage('LANDING_MESSAGE_CARD_HIDE'));
+	        return main_core.Tag.render(_templateObject6 || (_templateObject6 = babelHelpers.taggedTemplateLiteral(["\n\t\t\t\t<span class=\"ui-link ui-link-secondary ui-link-dashed landing-ui-card-message-close-link\" onclick=\"", "\">\n\t\t\t\t\t", "\n\t\t\t\t</span>\n\t\t\t"])), _this7.onCloseClick, landing_loc.Loc.getMessage('LANDING_MESSAGE_CARD_HIDE_MSGVER_1'));
 	      });
 	    }
 	  }, {
@@ -157,5 +157,5 @@ this.BX.Landing.UI = this.BX.Landing.UI || {};
 
 	exports.MessageCard = MessageCard;
 
-}((this.BX.Landing.UI.Card = this.BX.Landing.UI.Card || {}),BX,BX.Landing.UI.Card,BX.Landing));
+}((this.BX.Landing.UI.Card = this.BX.Landing.UI.Card || {}),BX,BX,BX,BX.Landing.UI.Card,BX.Landing));
 //# sourceMappingURL=messagecard.bundle.js.map

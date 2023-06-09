@@ -1,4 +1,4 @@
-<?
+<?php
 use Bitrix\Main;
 
 /*
@@ -10,7 +10,7 @@ class CIBlockXMLFile
 	var $_sessid = "";
 
 	var $charset = false;
-	var $element_stack = false;
+	var $element_stack = [];
 	var $file_position = 0;
 
 	var $read_size = 10240;
@@ -18,12 +18,9 @@ class CIBlockXMLFile
 	var $buf_position = 0;
 	var $buf_len = 0;
 
-	private $_get_xml_chunk_function = "_get_xml_chunk";
-
 	function __construct($table_name = "b_xml_tree")
 	{
 		$this->_table_name = strtolower($table_name);
-		$this->_get_xml_chunk_function = "_get_xml_chunk";
 	}
 
 	function StartSession($sess_id)
@@ -213,15 +210,21 @@ class CIBlockXMLFile
 		global $DB;
 
 		$strSql1 = "PARENT_ID, LEFT_MARGIN, RIGHT_MARGIN, DEPTH_LEVEL, NAME";
-		$strSql2 = intval($arFields["PARENT_ID"]).", ".intval($arFields["LEFT_MARGIN"]).", ".intval($arFields["RIGHT_MARGIN"]).", ".intval($arFields["DEPTH_LEVEL"]).", '".$DB->ForSQL($arFields["NAME"], 255)."'";
+		$strSql2 = (int)$arFields["PARENT_ID"] .", "
+			. (int)$arFields["LEFT_MARGIN"] . ", "
+			. (int)($arFields["RIGHT_MARGIN"] ?? 0) . ", "
+			. (int)($arFields["DEPTH_LEVEL"] ?? 0) .", '"
+			. $DB->ForSQL($arFields["NAME"] ?? '', 255)
+			."'"
+		;
 
-		if(array_key_exists("ATTRIBUTES", $arFields))
+		if (isset($arFields["ATTRIBUTES"]))
 		{
 			$strSql1 .= ", ATTRIBUTES";
 			$strSql2 .= ", '".$DB->ForSQL($arFields["ATTRIBUTES"])."'";
 		}
 
-		if(array_key_exists("VALUE", $arFields))
+		if (isset($arFields["VALUE"]))
 		{
 			$strSql1 .= ", VALUE";
 			$strSql2 .= ", '".$DB->ForSQL($arFields["VALUE"])."'";
@@ -235,7 +238,7 @@ class CIBlockXMLFile
 
 		$strSql = "INSERT INTO ".$this->_table_name." (".$strSql1.") VALUES (".$strSql2.")";
 
-		$rs = $DB->Query($strSql);
+		$DB->Query($strSql);
 
 		return $DB->LastID();
 	}
@@ -537,7 +540,6 @@ class CIBlockXMLFile
 	*/
 	function _start_element($xmlChunk)
 	{
-		global $DB;
 		static $search = array(
 				"'&(quot|#34);'i",
 				"'&(lt|#60);'i",
@@ -640,7 +642,7 @@ class CIBlockXMLFile
 		$child = array_pop($this->element_stack);
 		$this->element_stack[count($this->element_stack)-1]["R"] = $child["R"]+1;
 		if($child["R"] != $child["RO"])
-			$DB->Query("UPDATE ".$this->_table_name." SET RIGHT_MARGIN = ".intval($child["R"])." WHERE ID = ".intval($child["ID"]));
+			$DB->Query("UPDATE ".$this->_table_name." SET RIGHT_MARGIN = ".(int)$child["R"]." WHERE ID = ".(int)$child["ID"]);
 	}
 
 	/*
@@ -689,6 +691,15 @@ class CIBlockXMLFile
 		);
 		while($ar = $rs->Fetch())
 		{
+			if (
+				(int)$ar['PARENT_ID'] === 0
+				&& (int)$ar['RIGHT_MARGIN'] === 0
+				&& (int)$ar['DEPTH_LEVEL'] === 0
+				&& $ar['NAME'] === ''
+			)
+			{
+				continue;
+			}
 			if(isset($ar["VALUE_CLOB"]))
 				$ar["VALUE"] = $ar["VALUE_CLOB"];
 
@@ -710,12 +721,18 @@ class CIBlockXMLFile
 			else
 			{
 				$parent_id = $ar["PARENT_ID"];
-				if(!is_array($arIndex[$parent_id]))
-					$arIndex[$parent_id] = array();
+				if (!is_array($arIndex[$parent_id]))
+				{
+					$arIndex[$parent_id] = [];
+				}
 				$arIndex[$parent_id][$ar["NAME"]] = $ar["VALUE"];
 				$arIndex[$ar["ID"]] = &$arIndex[$parent_id][$ar["NAME"]];
 			}
 		}
+		unset($ar);
+		unset($rs);
+		unset($arIndex);
+		unset($arSalt);
 
 		return $arResult;
 	}
@@ -733,24 +750,36 @@ class CIBlockXMLFile
 			"VALUE" => "VALUE",
 		);
 		foreach($arSelect as $i => $field)
-			if(!array_key_exists($field, $arFields))
+		{
+			if (!isset($arFields[$field]))
+			{
 				unset($arSelect[$i]);
-		if(count($arSelect) <= 0)
+			}
+		}
+		if (empty($arSelect))
+		{
 			$arSelect[] = "*";
+		}
 
 		$arSQLWhere = array();
 		foreach($arFilter as $field => $value)
 		{
 			if($field == "ID" && is_array($value) && !empty($value))
-				$arSQLWhere[$field] = $field." in (".implode(",", array_map("intval", $value)).")";
+			{
+				Main\Type\Collection::normalizeArrayValuesByInt($value, false);
+				if (!empty($value))
+				{
+					$arSQLWhere[$field] = $field . " in (" . implode(",", $value) . ")";
+				}
+			}
 			elseif($field == "ID" || $field == "LEFT_MARGIN")
-				$arSQLWhere[$field] = $field." = ".intval($value);
+				$arSQLWhere[$field] = $field." = ".(int)$value;
 			elseif($field == "PARENT_ID" || $field == "PARENT_ID+0")
-				$arSQLWhere[$field] = $field." = ".intval($value);
+				$arSQLWhere[$field] = $field." = ".(int)$value;
 			elseif($field == ">ID")
-				$arSQLWhere[$field] = "ID > ".intval($value);
+				$arSQLWhere[$field] = "ID > ".(int)$value;
 			elseif($field == "><LEFT_MARGIN")
-				$arSQLWhere[$field] = "LEFT_MARGIN between ".intval($value[0])." AND ".intval($value[1]);
+				$arSQLWhere[$field] = "LEFT_MARGIN between ".(int)$value[0]." AND ".(int)$value[1];
 			elseif($field == "NAME")
 				$arSQLWhere[$field] = $field." = "."'".$DB->ForSQL($value)."'";
 		}
@@ -759,10 +788,14 @@ class CIBlockXMLFile
 
 		foreach($arOrder as $field => $by)
 		{
-			if(!array_key_exists($field, $arFields))
+			if(!isset($arFields[$field]))
+			{
 				unset($arSelect[$field]);
+			}
 			else
-				$arOrder[$field] = $field." ".($by=="desc"? "desc": "asc");
+			{
+				$arOrder[$field] = $field . " " . ($by == "desc" ? "desc" : "asc");
+			}
 		}
 
 		$strSql = "
@@ -788,9 +821,85 @@ class CIBlockXMLFile
 	function Delete($ID)
 	{
 		global $DB;
-		return $DB->Query("delete from ".$this->_table_name." where ID = ".intval($ID));
+		return $DB->Query("delete from ".$this->_table_name." where ID = ".(int)$ID);
 	}
 
+	/**
+	 * @param string $fileName
+	 * @param int|null $lastIndex
+	 * @param int $interval
+	 * @return bool|int
+	 */
+	public static function safeUnZip(string $fileName, ?int $lastIndex = null, int $interval = 0)
+	{
+		$startTime = time();
+
+		$dirName = mb_substr($fileName, 0, mb_strrpos($fileName, '/') + 1);
+		if (mb_strlen($dirName) <= mb_strlen($_SERVER['DOCUMENT_ROOT']))
+		{
+			return false;
+		}
+
+		/** @var CZip $archiver */
+		$archiver = CBXArchive::GetArchive($fileName, 'ZIP');
+		if (!($archiver instanceof IBXArchive))
+		{
+			return false;
+		}
+
+		if ($lastIndex !== null && $lastIndex < 0)
+		{
+			$lastIndex = null;
+		}
+
+		$entries = (int)$archiver->GetProperties()['nb'];
+		for ($index = 0; $index < $entries; $index++)
+		{
+			if ($lastIndex !== null)
+			{
+				if ($lastIndex >= $index)
+				{
+					continue;
+				}
+			}
+
+			$archiver->SetOptions([
+				'RULE' => [
+					'by_index' => [
+						[
+							'start' => $index,
+							'end' => $index,
+						]
+					]
+				]
+			]);
+
+			$result = $archiver->Unpack($dirName);
+			if (!$result)
+			{
+				return false;
+			}
+
+			if ($interval > 0 && (time() - $startTime) > $interval)
+			{
+				return $index;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * @deprecated deprecated since 23.0.0 - unsecure
+	 * @see CIBlockXMLFile::safeUnZip
+	 *
+	 * @param $file_name
+	 * @param $last_zip_entry
+	 * @param $start_time
+	 * @param $interval
+	 * @return bool|string
+	 * @throws Main\IO\InvalidPathException
+	 */
 	public static function UnZip($file_name, $last_zip_entry = "", $start_time = 0, $interval = 0)
 	{
 		//Function and securioty checks

@@ -405,11 +405,14 @@ if(isset($arResult["ID"]))
 
 				if($arParams["SET_TITLE"] || isset($arResult[$arParams["BROWSER_TITLE"]]))
 				{
-					$arTitleOptions = array(
-						'ADMIN_EDIT_LINK' => $arButtons["submenu"]["edit_element"]["ACTION"],
-						'PUBLIC_EDIT_LINK' => $arButtons["edit"]["edit_element"]["ACTION"],
-						'COMPONENT_NAME' => $this->GetName(),
-					);
+					if (isset($arButtons["submenu"]["edit_element"]))
+					{
+						$arTitleOptions = [
+							'ADMIN_EDIT_LINK' => $arButtons["submenu"]["edit_element"]["ACTION"],
+							'PUBLIC_EDIT_LINK' => $arButtons["edit"]["edit_element"]["ACTION"],
+							'COMPONENT_NAME' => $this->GetName(),
+						];
+					}
 				}
 			}
 		}

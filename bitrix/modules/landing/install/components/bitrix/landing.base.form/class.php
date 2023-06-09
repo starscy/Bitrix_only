@@ -172,7 +172,7 @@ class LandingBaseFormComponent extends LandingBaseComponent
 			}
 		}
 
-		// detect groups wich different
+		// detect groups which different
 		$diffGroups = array();
 		if (is_array($additionalFields))
 		{
@@ -454,7 +454,7 @@ class LandingBaseFormComponent extends LandingBaseComponent
 	{
 		if (
 			$this->init() &&
-			!$this->arResult['FATAL']
+			!($this->arResult['FATAL'] ?? false)
 		)
 		{
 			$this->arParams['SUCCESS_SAVE'] = false;

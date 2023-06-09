@@ -8,9 +8,8 @@ return [
 	'css' => 'dist/fieldslistfield.bundle.css',
 	'js' => 'dist/fieldslistfield.bundle.js',
 	'rel' => [
-		'landing.ui.field.basefield',
+		'ui.design-tokens',
 		'landing.loc',
-		'main.core',
 		'ui.draganddrop.draggable',
 		'landing.ui.panel.fieldspanel',
 		'landing.ui.component.listitem',
@@ -28,6 +27,8 @@ return [
 		'socnetlogdest',
 		'ui.hint',
 		'landing.ui.component.iconbutton',
+		'main.core',
+		'landing.ui.field.basefield',
 	],
 	'skip_core' => false,
 ];

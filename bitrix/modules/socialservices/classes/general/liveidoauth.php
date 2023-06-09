@@ -11,6 +11,11 @@ class CSocServLiveIDOAuth extends CSocServAuth
 
 	public function getEntityOAuth()
 	{
+		if (!$this->entityOAuth)
+		{
+			$this->entityOAuth = new CLiveIDOAuthInterface();
+		}
+
 		return $this->entityOAuth;
 	}
 
@@ -21,7 +26,7 @@ class CSocServLiveIDOAuth extends CSocServAuth
 			array("liveid_appsecret", GetMessage("socserv_liveid_client_secret"), "", Array("text", 40)),
 			array(
 				'note' => getMessage(
-					'socserv_liveid_form_note_2',
+					'socserv_liveid_form_note_3',
 					array(
 						'#URL#' => \CHttp::urn2uri('/bitrix/tools/oauth/liveid.php'),
 						'#MAIL_URL#' => \CHttp::urn2uri('/bitrix/tools/mail_oauth.php'),
@@ -49,24 +54,26 @@ class CSocServLiveIDOAuth extends CSocServAuth
 	{
 		global $APPLICATION;
 
-		$this->entityOAuth = new CLiveIDOAuthInterface();
-		if($this->userId == null)
-			$this->entityOAuth->setRefreshToken("skip");
-		if($addScope !== null)
-			$this->entityOAuth->addScope($addScope);
+		if ($this->userId == null)
+		{
+			$this->getEntityOAuth()->setRefreshToken("skip");
+		}
+		if ($addScope !== null)
+		{
+			$this->getEntityOAuth()->addScope($addScope);
+		}
 
-		CSocServAuthManager::SetUniqueKey();
-		if(IsModuleInstalled('bitrix24') && defined('BX24_HOST_NAME'))
+		if (IsModuleInstalled('bitrix24') && defined('BX24_HOST_NAME'))
 		{
 			$redirect_uri = self::CONTROLLER_URL."/redirect.php";
 			$state = \CHTTP::URN2URI("/bitrix/tools/oauth/liveid.php")."?state=";
-			$backurl = urlencode($GLOBALS["APPLICATION"]->GetCurPageParam('check_key='.$_SESSION["UNIQUE_KEY"], array("logout", "auth_service_error", "auth_service_id", "backurl"))).(isset($arParams['BACKURL']) ? '&redirect_url='.urlencode($arParams['BACKURL']) : '').'&mode='.$location;
+			$backurl = urlencode($GLOBALS["APPLICATION"]->GetCurPageParam('check_key='.\CSocServAuthManager::getUniqueKey(), array("logout", "auth_service_error", "auth_service_id", "backurl"))).(isset($arParams['BACKURL']) ? '&redirect_url='.urlencode($arParams['BACKURL']) : '').'&mode='.$location;
 			$state .= urlencode(urlencode("backurl=".$backurl));
 		}
 		else
 		{
 			$backurl = $APPLICATION->GetCurPageParam(
-				'check_key='.$_SESSION["UNIQUE_KEY"],
+				'check_key='.\CSocServAuthManager::getUniqueKey(),
 				array("logout", "auth_service_error", "auth_service_id", "backurl")
 			);
 
@@ -74,7 +81,7 @@ class CSocServLiveIDOAuth extends CSocServAuth
 			$state = 'site_id='.SITE_ID.'&backurl='.urlencode($backurl).(isset($arParams['BACKURL']) ? '&redirect_url='.urlencode($arParams['BACKURL']) : '').'&mode='.$location;
 		}
 
-		return $this->entityOAuth->GetAuthUrl($redirect_uri, $state);
+		return $this->getEntityOAuth()->GetAuthUrl($redirect_uri, $state);
 	}
 
 	public function getStorageToken()
@@ -255,7 +262,7 @@ class CSocServLiveIDOAuth extends CSocServAuth
 
 		echo $JSScript;
 
-		die();
+		CMain::FinalActions();
 	}
 
 	public function getFriendsList($limit = 0, $offset = 0)

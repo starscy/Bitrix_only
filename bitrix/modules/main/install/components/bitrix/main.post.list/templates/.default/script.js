@@ -32,6 +32,7 @@
 		this.order = params["order"]; // message sort direction DESC || ASC
 		this.mid = parseInt(params["mid"]); // last messageId
 		this.operationIds = [];
+		this.canCheckVisibleComments = true;
 
 		this.status = "ready";
 		this.msg = (this.node.navigation ? this.node.navigation.innerHTML : "");
@@ -444,13 +445,16 @@
 			this.bindEvents.unshift([this.eventNode, "mouseup", this.privateEvents["onQuote"]]);
 			//region dnd
 			var timerListenEnter = 0;
-			var stopListenEnter = function() {
+			var stopListenEnter = function(e) {
+				if (e && e.currentTarget.contains(e.relatedTarget))
+				{
+					return;
+				}
 				if (timerListenEnter > 0)
 				{
 					clearTimeout(timerListenEnter);
 					timerListenEnter = 0;
 				}
-				this.node.formHolder.classList.remove('feed-com-add-box-dnd-over')
 			}.bind(this);
 			var fireDragEnter = function() {
 				stopListenEnter();
@@ -459,8 +463,7 @@
 			var startListenEnter = function() {
 				if (timerListenEnter <= 0)
 				{
-					timerListenEnter = setTimeout(fireDragEnter, 3000);
-					this.node.formHolder.classList.add('feed-com-add-box-dnd-over')
+					timerListenEnter = setTimeout(fireDragEnter, 200);
 				}
 			}.bind(this);
 			this.bindEvents.unshift([this.node.main, "dragover", startListenEnter]);
@@ -916,7 +919,7 @@
 							avatar && avatar.length > 0
 								? BX.create("I", {
 									style: {
-										background: 'url(' + avatar + ')',
+										background: "url('" + avatar + "')",
 										backgroundSize: 'cover'
 									}
 								})
@@ -1063,9 +1066,6 @@
 						NAME_TEMPLATE : this.params.NAME_TEMPLATE,
 						SHOW_LOGIN : this.params.SHOW_LOGIN,
 						CLASSNAME : BX.type.isPlainObject(options) && options.live ? 'feed-com-block-live' : '',
-
-						CONTENT_VIEW_KEY : this.params.CONTENT_VIEW_KEY,
-						CONTENT_VIEW_KEY_SIGNED : this.params.CONTENT_VIEW_KEY_SIGNED,
 					},
 					this.getTemplate()
 				));
@@ -1335,7 +1335,7 @@
 					if (act === "DELETE")
 					{
 						BX.hide(container);
-						this.comments.delete(id[1]);
+						this.comments.delete(id.toString());
 						BX.onCustomEvent(window, "OnUCommentWasDeleted", [this.ENTITY_XML_ID, [this.ENTITY_XML_ID, id], data]);
 					}
 					else if (act !== "EDIT" && !!data["message"])
@@ -1594,6 +1594,10 @@
 			}
 		},
 		checkVisibleComments : function(screenPosition) {
+			if (!this.canCheckVisibleComments)
+			{
+				return;
+			}
 			var keys = this.getVisibleCommentIds(this.unreadComments, screenPosition);
 			var key;
 			while (key = keys.shift())
@@ -2084,7 +2088,6 @@
 		{
 			var taskId = +/\d+/.exec(entityXmlId);
 			var result = BX.Tasks.ResultManager.getInstance().getResult(taskId);
-
 			if (
 				result
 				&& result.context === 'task'
@@ -2093,7 +2096,7 @@
 			)
 			{
 				panels.push({
-					text : BX.message("BPC_MES_REMOVE_TASK_RESULT"),
+					text : BX.message("BPC_MES_DELETE_TASK_RESULT"),
 					onclick : function() {
 						BX.Tasks.ResultAction.getInstance().deleteFromComment(ID);
 						this.popupWindow.close();
@@ -2322,16 +2325,11 @@
 		params["NAME_TEMPLATE"] = (params["NAME_TEMPLATE"] || "");
 		params["SHOW_LOGIN"] = (params["SHOW_LOGIN"] || "");
 
-		params["CONTENT_VIEW_KEY"] = (params["CONTENT_VIEW_KEY"] || "");
-		params["CONTENT_VIEW_KEY_SIGNED"] = (params["CONTENT_VIEW_KEY_SIGNED"] || "");
-
 		var res = (data && data["messageFields"] ? data["messageFields"] : data);
 		var replacement = {
 				"ID" : "",
 				"FULL_ID" : "",
 				"CONTENT_ID" : "",
-				"CONTENT_VIEW_KEY" : "",
-				"CONTENT_VIEW_KEY_SIGNED" : "",
 				"ENTITY_XML_ID" : "",
 				"EXEMPLAR_ID" : "",
 				"NEW" : "old",
@@ -2418,8 +2416,6 @@
 						? res['RATING']['ENTITY_TYPE_ID'] + '-' + res['RATING']['ENTITY_ID']
 						: ''
 				),
-				"CONTENT_VIEW_KEY" : params["CONTENT_VIEW_KEY"],
-				"CONTENT_VIEW_KEY_SIGNED" : params["CONTENT_VIEW_KEY_SIGNED"],
 				"ENTITY_XML_ID" : res["ENTITY_XML_ID"],
 				"EXEMPLAR_ID" : params["EXEMPLAR_ID"],
 				"NEW" : res["NEW"] == "Y" ? "new" : "old",

@@ -5,7 +5,7 @@ if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED !== true)
 }
 
 use \Bitrix\Main\Localization\Loc;
-Loc::loadMessages(dirname(__FILE__).'/.description-nottranslate.php');
+Loc::loadMessages(__DIR__.'/.description-nottranslate.php');
 
 return [
 	'name' => Loc::getMessage('LANDING_DEMO_23FEB1_TITLE'),
@@ -700,7 +700,7 @@ return [
 	<div class="text-center g-pa-10">
 		<div class="g-width-600 mx-auto">
 			<div class="landing-block-node-text g-font-size-12  js-animation animation-none">
-				<p>&copy; 2021 All right reserved.</p>
+				<p>&copy; 2022 All right reserved.</p>
 			</div>
 		</div>
 	</div>

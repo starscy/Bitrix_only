@@ -5,7 +5,8 @@ class Version
 {
 	private const VERSIONS = [
 		0 => null,
-		// 1 => \Bitrix\Landing\Site\Update\ChatSales::class,
+		1 => \Bitrix\Landing\Site\Update\ChatSales::class,
+		2 => \Bitrix\Landing\Site\Update\ChatSalesOrder::class,
 	];
 
 	protected static $process = false;
@@ -18,9 +19,6 @@ class Version
 	 */
 	public static function update(int $siteId, ?int $version = 0): void
 	{
-		// tmp disable updates
-		return;
-
 		if (self::$process)
 		{
 			return;

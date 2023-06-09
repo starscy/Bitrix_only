@@ -19,7 +19,11 @@ $bodyClass = $APPLICATION->getPageProperty('BodyClass', false);
 $bodyClasses = 'pagetitle-toolbar-field-view no-hidden no-background no-all-paddings';
 $APPLICATION->setPageProperty('BodyClass', trim(sprintf('%s %s', $bodyClass, $bodyClasses)));
 
-\Bitrix\Main\UI\Extension::load(array("ui.alerts"));
+\Bitrix\Main\UI\Extension::load([
+	'ui.design-tokens',
+	'ui.fonts.opensans',
+	'ui.alerts',
+]);
 
 if (!$arResult['SLIDER'])
 {

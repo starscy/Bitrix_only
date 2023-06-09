@@ -10,7 +10,10 @@ return [
 	'rel' => [
 		'landing.ui.field.basefield',
 		'main.popup',
+		'ui.fonts.opensans',
+		'ui.design-tokens',
 		'main.core.events',
+		'landing.ui.field.image',
 		'landing.backend',
 		'landing.pageobject',
 		'main.core',

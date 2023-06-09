@@ -1,8 +1,8 @@
 <?php
 namespace Bitrix\Landing\Site;
 
-use \Bitrix\Landing\Role;
-use \Bitrix\Landing\Site;
+use Bitrix\Landing\Role;
+use Bitrix\Landing\Site;
 
 class Type
 {
@@ -47,6 +47,20 @@ class Type
 			return $class;
 		}
 
+		return null;
+	}
+
+	/**
+	 * Detects site type forms and returns it.
+	 * @param $siteCode
+	 * @return string|null
+	 */
+	public static function getSiteTypeForms($siteCode)
+	{
+		if (preg_match('#^/' . self::PSEUDO_SCOPE_CODE_FORMS . '[\d]*/$#', $siteCode))
+		{
+			return self::PSEUDO_SCOPE_CODE_FORMS;
+		}
 		return null;
 	}
 
@@ -200,5 +214,24 @@ class Type
 		}
 
 		return false;
+	}
+
+	/**
+	 * Scoped method for returning available operations of site.
+	 * @param int $siteId Site id.
+	 * @see \Bitrix\Landing\Rights::getOperationsForSite
+	 * @return array|null
+	 */
+	public static function getOperationsForSite(int $siteId): ?array
+	{
+		if (
+			self::$currentScopeClass !== null
+			&& is_callable([self::$currentScopeClass, 'getOperationsForSite'])
+		)
+		{
+			return self::$currentScopeClass::getOperationsForSite($siteId);
+		}
+
+		return null;
 	}
 }

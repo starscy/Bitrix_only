@@ -1,9 +1,12 @@
 <?php
+
 namespace Bitrix\Landing\Node;
 
 use \Bitrix\Landing\File;
+use Bitrix\Landing\History;
 use \Bitrix\Landing\Manager;
 use \Bitrix\Main\Web\DOM\StyleInliner;
+use \Bitrix\Landing\Node;
 
 class Img extends \Bitrix\Landing\Node
 {
@@ -27,12 +30,12 @@ class Img extends \Bitrix\Landing\Node
 	{
 		$doc = $block->getDom();
 		$resultList = $doc->querySelectorAll($selector);
+		$valueBefore = static::getNode($block, $selector);
 		$files = null;
 
 		foreach ($data as $pos => $value)
 		{
 			// 2x - this for retina support
-
 			$src = (isset($value['src']) && is_string($value['src'])) ? trim($value['src']) : '';
 			$src2x = (isset($value['src2x']) && is_string($value['src2x'])) ? trim($value['src2x']) : '';
 			$alt = (isset($value['alt']) && is_string($value['alt'])) ? trim($value['alt']) : '';
@@ -52,8 +55,8 @@ class Img extends \Bitrix\Landing\Node
 			if (isset($value['url']))
 			{
 				$url = is_array($value['url'])
-						? json_encode($value['url'])
-						: $value['url'];
+					? json_encode($value['url'])
+					: $value['url'];
 			}
 			else
 			{
@@ -97,7 +100,7 @@ class Img extends \Bitrix\Landing\Node
 					{
 						// and one two additional bg
 						$newStyles = [
-							"background-image: url('{$src}');"
+							"background-image: url('{$src}');",
 						];
 						if ($src2x)
 						{
@@ -105,7 +108,7 @@ class Img extends \Bitrix\Landing\Node
 								$newStyles,
 								[
 									"background-image: -webkit-image-set(url('{$src}') 1x, url('{$src2x}') 2x);",
-									"background-image: image-set(url('{$src}') 1x, url('{$src2x}') 2x);"
+									"background-image: image-set(url('{$src}') 1x, url('{$src2x}') 2x);",
 								]
 							);
 						}
@@ -136,15 +139,15 @@ class Img extends \Bitrix\Landing\Node
 					if ($isLazy)
 					{
 						$resultList[$pos]->setAttribute('data-lazy-bg', 'Y');
-						if($lazyOrigSrc = $value['lazyOrigSrc'])
+						if ($lazyOrigSrc = $value['lazyOrigSrc'])
 						{
 							$resultList[$pos]->setAttribute('data-src', $lazyOrigSrc);
 						}
-						if($lazyOrigSrc2x = $value['lazyOrigSrc2x'])
+						if ($lazyOrigSrc2x = $value['lazyOrigSrc2x'])
 						{
 							$resultList[$pos]->setAttribute('data-src2x', $lazyOrigSrc2x);
 						}
-						if($lazyOrigStyle = $value['lazyOrigStyle'])
+						if ($lazyOrigStyle = $value['lazyOrigStyle'])
 						{
 							$resultList[$pos]->setAttribute('data-style', $lazyOrigStyle);
 						}
@@ -164,31 +167,43 @@ class Img extends \Bitrix\Landing\Node
 					}
 
 					// for lazyload
-					if($isLazy)
+					if ($isLazy)
 					{
 						$resultList[$pos]->setAttribute('data-lazy-img', 'Y');
 						$resultList[$pos]->setAttribute('loading', 'lazy');
-						if($lazyOrigSrc = $value['lazyOrigSrc'])
+						if ($lazyOrigSrc = $value['lazyOrigSrc'])
 						{
 							$resultList[$pos]->setAttribute('data-src', $lazyOrigSrc);
 						}
-						if($lazyOrigSrcset = $value['lazyOrigSrcset'])
+						if ($lazyOrigSrcset = $value['lazyOrigSrcset'])
 						{
 							$resultList[$pos]->setAttribute('data-srcset', $lazyOrigSrcset);
 						}
 					}
 				}
-				if ($id)
+				$id
+					? $resultList[$pos]->setAttribute('data-fileid', $id)
+					: $resultList[$pos]->removeAttribute('data-fileid')
+				;
+				$id2x
+					? $resultList[$pos]->setAttribute('data-fileid2x', $id2x)
+					: $resultList[$pos]->removeAttribute('data-fileid2x')
+				;
+				$url
+					? $resultList[$pos]->setAttribute('data-pseudo-url', $url)
+					: $resultList[$pos]->removeAttribute('data-pseudo-url')
+				;
+
+				if (History::isActive())
 				{
-					$resultList[$pos]->setAttribute('data-fileid', $id);
-				}
-				if ($id2x)
-				{
-					$resultList[$pos]->setAttribute('data-fileid2x', $id2x);
-				}
-				if ($url)
-				{
-					$resultList[$pos]->setAttribute('data-pseudo-url', $url);
+					$history = new History($block->getLandingId(), History::ENTITY_TYPE_LANDING);
+					$history->push('EDIT_IMG', [
+						'block' => $block,
+						'selector' => $selector,
+						'position' => (int)$pos,
+						'valueBefore' => $valueBefore[$pos],
+						'valueAfter' => $value,
+					]);
 				}
 			}
 		}
@@ -202,12 +217,25 @@ class Img extends \Bitrix\Landing\Node
 	 */
 	public static function getNode(\Bitrix\Landing\Block $block, $selector)
 	{
-		$data = array();
+		$data = [];
 		$doc = $block->getDom();
 		$resultList = $doc->querySelectorAll($selector);
+		if (!$resultList)
+		{
+			$resultList = Node\Style::getNodesBySelector($block, $selector);
+		}
 
 		foreach ($resultList as $pos => $res)
 		{
+			$data[$pos] = [
+				'src' => '',
+				'src2x' => '',
+				'id' => null,
+				'id2x' => null,
+				'alt' => '',
+				'isLazy' => 'N',
+			];
+
 			if ($res->getTagName() !== 'IMG')
 			{
 				$styles = StyleInliner::getStyle($res);
@@ -225,7 +253,7 @@ class Img extends \Bitrix\Landing\Node
 					{
 						for ($i = 0, $c = count($matches[1]); $i < $c; $i++)
 						{
-							if ($matches[2][$i] == 2)
+							if ($matches[2][$i] === '2x')
 							{
 								$src2x = $matches[1][$i];
 							}
@@ -237,7 +265,6 @@ class Img extends \Bitrix\Landing\Node
 					}
 					if ($src || $src2x)
 					{
-						$data[$pos] = [];
 						if ($src)
 						{
 							$data[$pos]['src'] = Manager::getUrlFromFile($src);
@@ -249,21 +276,21 @@ class Img extends \Bitrix\Landing\Node
 					}
 
 					// for lazyload
-					if(
+					if (
 						($isLazy = $res->getAttribute('data-lazy-bg'))
 						&& $isLazy === 'Y'
 					)
 					{
 						$data[$pos]['isLazy'] = 'Y';
-						if($lazyOrigSrc = $res->getAttribute('data-src'))
+						if ($lazyOrigSrc = $res->getAttribute('data-src'))
 						{
 							$data[$pos]['lazyOrigSrc'] = $lazyOrigSrc;
 						}
-						if($lazyOrigSrc2x = $res->getAttribute('data-src2x'))
+						if ($lazyOrigSrc2x = $res->getAttribute('data-src2x'))
 						{
 							$data[$pos]['lazyOrigSrc2x'] = $lazyOrigSrc2x;
 						}
-						if($lazyOrigStyle = $res->getAttribute('data-style'))
+						if ($lazyOrigStyle = $res->getAttribute('data-style'))
 						{
 							$data[$pos]['lazyOrigStyle'] = $lazyOrigStyle;
 						}
@@ -275,10 +302,9 @@ class Img extends \Bitrix\Landing\Node
 				$src = $res->getAttribute('src');
 				$srcSet = $res->getAttribute('srcset');
 
-				$data[$pos] = array(
-					'alt' => $res->getAttribute('alt'),
-					'src' => Manager::getUrlFromFile($src),
-				);
+				$data[$pos]['src'] = Manager::getUrlFromFile($src);
+				$data[$pos]['alt'] = $res->getAttribute('alt');
+
 				if (preg_match('/[\,\s]*(.*?)\s+2x/is', $srcSet, $matches))
 				{
 					$data[$pos]['src2x'] = Manager::getUrlFromFile($matches[1]);
@@ -304,22 +330,28 @@ class Img extends \Bitrix\Landing\Node
 						{
 							$data[$pos]['lazyOrigSrc2x'] = $matches[1];
 						}
-
+						// comment just for changes
 						$data[$pos]['lazyOrigSrcset'] = $lazyOrigSrcset;
 					}
 				}
 			}
-			$dataAtrs = [
-				'data-pseudo-url' => 'url',
-				'data-fileid' => 'id',
-				'data-fileid2x' => 'id2x',
-			];
-			foreach ($dataAtrs as $codeFrom => $codeTo)
+
+			if ($val = $res->getAttribute('data-pseudo-url'))
 			{
-				if ($val = $res->getAttribute($codeFrom))
-				{
-					$data[$pos][$codeTo] = $val;
-				}
+				$data[$pos]['url'] = $val;
+			}
+
+			if ($val = $res->getAttribute('data-fileid'))
+			{
+				$data[$pos]['id'] = $val;
+			}
+
+			if (
+				(isset($data[$pos]['src2x']) || isset($data[$pos]['lazyOrigSrc2x']))
+				&& ($val = $res->getAttribute('data-fileid2x'))
+			)
+			{
+				$data[$pos]['id2x'] = $val;
 			}
 		}
 
@@ -351,5 +383,29 @@ class Img extends \Bitrix\Landing\Node
 		}
 
 		return $searchContent;
+	}
+
+	/**
+	 * Prepare node if is styleImg type.
+	 * @param \Bitrix\Landing\Block $block Block instance.
+	 * @param array $node Selector.
+	 * @param $manifest
+	 * @return array
+	 */
+	public static function prepareManifest(\Bitrix\Landing\Block $block, array $node, $manifest): array
+	{
+		$matches = [];
+		$pattern = '/' . substr($node['code'], 1) . '[^\"]*/i';
+		if (preg_match($pattern, $block->getContent(), $matches) === 1)
+		{
+			$pattern = '/[\s]?g-bg-image[\s]?/i';
+			if (preg_match($pattern, $matches[0]) === 1)
+			{
+				$node['type'] = 'styleimg';
+				$node['handler'] = StyleImg::getHandlerJS();
+			}
+		}
+
+		return $node;
 	}
 }

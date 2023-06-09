@@ -579,7 +579,7 @@ abstract class Field
 	{
 		$map = array_flip(static::$oldDataTypes);
 
-		return isset($map[$class]) ? $map[$class] : 'string';
+		return $map[$class] ?? 'string';
 	}
 
 	/**
@@ -640,7 +640,7 @@ abstract class Field
 
 	public function unserialize($value)
 	{
-		return unserialize($value);
+		return unserialize((string)$value);
 	}
 
 	/**

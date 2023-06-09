@@ -152,6 +152,7 @@ class UserConditionControl extends \CSaleCondCtrlComplex
 					'param_id' => 'n',
 					'show_value' => 'Y',
 					'user_load_url' => '/bitrix/admin/sale_discount_edit.php?lang=' . LANGUAGE_ID,
+					'coreUserInfo' => 'Y',
 				),
 				'PHP_VALUE' => array(
 					'VALIDATE' => 'user'
@@ -220,7 +221,7 @@ class UserConditionControl extends \CSaleCondCtrlComplex
 			if (isset($control['JS_VALUE']['multiple']) && $control['JS_VALUE']['multiple'] == 'Y')
 			{
 				$multi = true;
-				$joinOperator = (isset($logic['MULTI_SEP']) ? $logic['MULTI_SEP'] : ' && ');
+				$joinOperator = ($logic['MULTI_SEP'] ?? ' && ');
 			}
 			$field = $params['ORDER'].'[\''.$control['FIELD'].'\']';
 			switch ($control['FIELD_TYPE'])

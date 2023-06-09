@@ -328,7 +328,7 @@ final class Loc
 		$currentFile = null;
 		for($i = 3; $i >= 1; $i--)
 		{
-			if(mb_stripos($trace[$i]["function"], "GetMessage") === 0)
+			if (isset($trace[$i]) && stripos($trace[$i]["function"], "GetMessage") === 0)
 			{
 				$currentFile = Path::normalize($trace[$i]["file"]);
 
@@ -452,7 +452,7 @@ final class Loc
 	 */
 	public static function getDefaultLang($lang)
 	{
-		static $subst = array('ua'=>'ru', 'kz'=>'ru', 'by'=>'ru', 'ru'=>'ru', 'en'=>'en', 'de'=>'en');
+		static $subst = ['ua' => 'en', 'kz' => 'ru', 'by' => 'ru', 'ru' => 'ru', 'en' => 'en', 'de' => 'en'];
 		if(isset($subst[$lang]))
 		{
 			return $subst[$lang];

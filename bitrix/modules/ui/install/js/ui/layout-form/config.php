@@ -9,7 +9,9 @@ return [
 	'js' => "/bitrix/js/ui/layout-form/dist/layout-form.bundle.js",
 	'rel' => [
 		'main.core',
+		'ui.design-tokens',
 		'ui.forms',
+		'main.core.events',
 	],
 	'skip_core' => false,
 ];

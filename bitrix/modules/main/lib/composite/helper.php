@@ -342,7 +342,7 @@ class Helper
 			$host = preg_replace("/:(\\d+)\$/", "-\\1", $host);
 		}
 
-		$privateKey = preg_replace("~[^a-z0-9/_]~i", "", $privateKey);
+		$privateKey = preg_replace("~[^a-z0-9/_]~i", "", (string)$privateKey);
 		if ($privateKey <> '')
 		{
 			$privateKey = "/".trim($privateKey, "/");
@@ -553,7 +553,7 @@ class Helper
 			include($fileName);
 		}
 
-		$compile = count(array_diff(self::getCompiledOptions(), array_keys($arHTMLPagesOptions))) > 0;
+		$compile = !empty(array_diff(self::getCompiledOptions(), array_keys($arHTMLPagesOptions)));
 		$arHTMLPagesOptions = $arHTMLPagesOptions + self::getDefaultOptions();
 		if ($compile)
 		{

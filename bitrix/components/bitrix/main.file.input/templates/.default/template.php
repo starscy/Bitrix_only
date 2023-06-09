@@ -1,4 +1,5 @@
-<?if(!defined("B_PROLOG_INCLUDED")||B_PROLOG_INCLUDED!==true)die();
+<?php
+if(!defined("B_PROLOG_INCLUDED")||B_PROLOG_INCLUDED!==true)die();
 /**
  * @var array $arParams
  * @var array $arResult
@@ -24,6 +25,7 @@
 </ul>
 <?*/
 
+$arParams["SHOW_AVATAR_EDITOR"] = $arParams["SHOW_AVATAR_EDITOR"] ?? null;
 if ($arParams["SHOW_AVATAR_EDITOR"] == "Y")
 {
 	\CJSCore::Init(array("webrtc_adapter", "avatar_editor"));
@@ -57,7 +59,7 @@ HTML;
 		{
 			$ext = GetFileExtension($file['ORIGINAL_NAME']);
 			$isImage = CFile::IsImage($file["ORIGINAL_NAME"], $file["CONTENT_TYPE"]);
-			$t = ($isImage ? CFile::ResizeImageGet($file, array( "width" => 100, "height" => 100 ), BX_RESIZE_IMAGE_EXACT, false) : array("src" => "/bitrix/images/1.gif"));
+			$t = ($isImage ? CFile::ResizeImageGet($file, array( "width" => 100, "height" => 100 ), BX_RESIZE_IMAGE_EXACT, false, false, true) : array("src" => "/bitrix/images/1.gif"));
 			?><li class="saved"><?=str_replace(
 				array("#input_name#", "#file_id#", "#name#", "#size#", "#url#", "#url_delete#", "#preview_url#", "#ext#"),
 				array($arParams['INPUT_NAME'],
@@ -126,7 +128,7 @@ HTML;
 				"allowUpload" => $arParams["ALLOW_UPLOAD"],
 				"allowUploadExt" => $arParams["ALLOW_UPLOAD_EXT"],
 				"uploadMaxFilesize" => $arParams['MAX_FILE_SIZE'],
-				"enableCamera" => $arParams['ENABLE_CAMERA'] !== "N",
+				"enableCamera" => !isset($arParams['ENABLE_CAMERA']) || $arParams['ENABLE_CAMERA'] !== "N",
 
 				"urlUpload" => $arParams["URL_TO_UPLOAD"]
 			))?>);

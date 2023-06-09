@@ -37,7 +37,7 @@ class CSocServBoxAuth extends CSocServAuth
 		return array(
 			array("box_appid", GetMessage("socserv_box_client_id"), "", array("text", 40)),
 			array("box_appsecret", GetMessage("socserv_box_client_secret"), "", array("text", 40)),
-			array("note"=>GetMessage("socserv_box_note", array('#URL#'=>CBoxOAuthInterface::GetRedirectURI()))),
+			array("note"=>GetMessage("socserv_box_note_2", array('#URL#'=>CBoxOAuthInterface::GetRedirectURI()))),
 		);
 	}
 
@@ -68,17 +68,16 @@ class CSocServBoxAuth extends CSocServAuth
 		global $APPLICATION;
 
 		$this->entityOAuth = $this->getEntityOAuth();
-		CSocServAuthManager::SetUniqueKey();
 		if(IsModuleInstalled('bitrix24') && defined('BX24_HOST_NAME'))
 		{
 			$redirect_uri = static::CONTROLLER_URL."/redirect.php";
-			$state = CBoxOAuthInterface::GetRedirectURI()."?check_key=".$_SESSION["UNIQUE_KEY"]."&state=";
+			$state = CBoxOAuthInterface::GetRedirectURI()."?check_key=".\CSocServAuthManager::getUniqueKey()."&state=";
 			$backurl = $APPLICATION->GetCurPageParam('', array("logout", "auth_service_error", "auth_service_id", "backurl"));
 			$state .= urlencode("state=".urlencode("backurl=".urlencode($backurl).'&mode='.$location.(isset($arParams['BACKURL']) ? '&redirect_url='.urlencode($arParams['BACKURL']) : '')));
 		}
 		else
 		{
-			$state = 'site_id='.SITE_ID.'&backurl='.urlencode($APPLICATION->GetCurPageParam('check_key='.$_SESSION["UNIQUE_KEY"], array("logout", "auth_service_error", "auth_service_id", "backurl"))).'&mode='.$location.(isset($arParams['BACKURL']) ? '&redirect_url='.urlencode($arParams['BACKURL']) : '');
+			$state = 'site_id='.SITE_ID.'&backurl='.urlencode($APPLICATION->GetCurPageParam('check_key='.\CSocServAuthManager::getUniqueKey(), array("logout", "auth_service_error", "auth_service_id", "backurl"))).'&mode='.$location.(isset($arParams['BACKURL']) ? '&redirect_url='.urlencode($arParams['BACKURL']) : '');
 			$redirect_uri = CBoxOAuthInterface::GetRedirectURI();
 		}
 
@@ -289,7 +288,7 @@ class CSocServBoxAuth extends CSocServAuth
 
 		echo $JSScript;
 
-		die();
+		CMain::FinalActions();
 	}
 }
 

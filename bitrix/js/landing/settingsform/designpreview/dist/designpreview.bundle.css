@@ -12,14 +12,10 @@
 	--design-preview-font-theme: "Montserrat", Arial, sans-serif;
 	--design-preview-font-h: "Montserrat", Arial, sans-serif;
 	--design-preview-font-h-theme: "Montserrat", Arial, sans-serif;
-}
-
-.landing-design-preview-wrap
-{
 	position: absolute;
 	top: 0;
 	right: 20px;
-	width: 45%;
+	width: 40%;
 }
 
 .landing-design-preview
@@ -32,7 +28,7 @@
 	-webkit-box-direction: normal;
 	    -ms-flex-direction: column;
 	        flex-direction: column;
-	padding: 30px 25px;
+	padding: 20px;
 	margin-top: 20px;
 	color: var(--design-preview-color);
 	font-size: var(--design-preview-font-size);
@@ -43,6 +39,7 @@
 	        box-shadow: 0 4px 15px -10px var(--design-preview-primary);
     font-family: var(--design-preview-font);
     font-family: var(--design-preview-font-theme);
+	border-radius: var(--ui-border-radius-md);
 }
 
 .landing-design-preview-title, .landing-design-preview-subtitle
@@ -89,6 +86,7 @@
 	color: white;
 	line-height: 1.4;
 	padding: 8px 20px;
+	border-radius: var(--ui-btn-radius);
 	font-size: 15px; /* 1.07143rem */
 	font-weight: 700 !important;
 	position: relative;
@@ -108,10 +106,6 @@
 
 .landing-ui-panel-google-fonts {
     top: 0 !important;
-}
-
-.landing-ui-panel-content {
-    z-index: 1000;
 }
 
 .landing-ui-font-preview {

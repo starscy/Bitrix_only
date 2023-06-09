@@ -82,6 +82,7 @@ BX.Kanban.Grid = function(options)
 	this.selectedItems = [];
 	this.addItemTitleText = options.addItemTitleText;
 	this.addDraftItemInfo = options.addDraftItemInfo;
+	this.columnsRevert = options.columnsRevert;
 
 	/** @private **/
 	this.canAddColumn = false;
@@ -920,7 +921,7 @@ BX.Kanban.Grid.prototype =
 
 		this.layout.outerContainer = BX.create("div", {
 			props: {
-				className: "main-kanban"
+				className: this.columnsRevert ? "main-kanban --columns-revert" : "main-kanban"
 			},
 			style: {
 				backgroundColor: this.getBgColorStyle()
@@ -1091,9 +1092,9 @@ BX.Kanban.Grid.prototype =
 				className: "main-kanban-loader-container"
 			},
 			html:
-			'<svg class="main-kanban-loader-circular" viewBox="25 25 50 50">' +
+				'<svg class="main-kanban-loader-circular" viewBox="25 25 50 50">' +
 				'<circle class="main-kanban-loader-path" cx="50" cy="50" r="20" fill="none" stroke-miterlimit="10"/>' +
-			'</svg>'
+				'</svg>'
 		});
 
 		return this.layout.loader;
@@ -1215,7 +1216,7 @@ BX.Kanban.Grid.prototype =
 		for (var itemId in items)
 		{
 			var column = this.getColumn(items[itemId].columnId);
-			
+
 			if(currentColumns.indexOf(column) === -1)
 			{
 				currentColumns.push(column);
@@ -1438,7 +1439,7 @@ BX.Kanban.Grid.prototype =
 				this.selectedItems[item].unDisabledItem();
 			}
 		}
-		
+
 		this.resetDragMode();
 		this.getDropZoneArea().hide();
 

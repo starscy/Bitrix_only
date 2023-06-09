@@ -222,6 +222,10 @@ if(
 
 		$filter['=APP_ID'] = $arApp['ID'];
 		$filter['=PLACEMENT'] = $arParams['PLACEMENT'];
+		$filter['=USER_ID'] = [
+			PlacementTable::DEFAULT_USER_ID_VALUE,
+			$USER->GetID(),
+		];
 
 		$res = PlacementTable::getList(
 			[
@@ -561,6 +565,7 @@ if(
 
 		$p = parse_url($arResult['APP_URL']);
 		$arResult['APP_HOST'] = $p['host'];
+		$arResult['APP_PORT'] = $p['port'];
 		$arResult['APP_PROTO'] = $p['scheme'];
 
 		if($p['port'])
