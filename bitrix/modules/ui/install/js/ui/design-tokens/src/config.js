@@ -1,10 +1,26 @@
 const fs = require('fs');
+const StyleDictionary = require('style-dictionary');
+const { fileHeader, sortByReference, createPropertyFormatter } = StyleDictionary.formatHelpers;
+
+const Color = require('tinycolor2');
+
+const fontWeights = {
+	100: 'Thin',
+	200: 'Extra Light',
+	300: 'Light',
+	400: 'Regular',
+	500: 'Medium',
+	600: 'Semi Bold',
+	700: 'Bold',
+	800: 'Extra Bold',
+	900: 'Black',
+	950: 'Extra Black',
+};
 
 module.exports = {
 	source: ['*.json'],
 	transform: {
-		shadow: {
-			name: 'shadow/css',
+		'css/shadow': {
 			type: 'value',
 			matcher: (prop) => {
 				return prop.attributes.category === 'shadow';
@@ -15,29 +31,155 @@ module.exports = {
 				//shadowColor.setAlpha(alpha);
 				//shadowColor.toRgbString();
 
-				return `${x}px ${y}px ${blur}px ${spread}px ${shadowColor}`
+				return `${x}px ${y}px ${blur}px ${spread}px ${color}`
 			},
 		},
+		'rgb-color-value': {
+			type: 'value',
+			matcher: (prop) => {
+				return prop.attributes.category === 'color';
+			},
+			transformer: (token) => {
+				if (token.value === 'none' || token.value === 'transparent')
+				{
+					return token.value;
+				}
+
+				const color = Color(token.value);
+				if (color.getAlpha() === 1)
+				{
+					return color.toHexString();
+				}
+				else
+				{
+					return color.toRgbString();
+				}
+			},
+		},
+		'figma/font-weight': {
+			type: 'value',
+			matcher: (prop) => {
+				return prop.attributes.category === 'font' && prop.attributes.type === 'weight';
+			},
+			transformer: (token) => {
+				return fontWeights[token.value];
+			},
+		},
+		'figma/letter-spacing': {
+			type: 'value',
+			matcher: (prop) => {
+				return prop.attributes.category === 'text' && prop.attributes.type === 'letter-spacing';
+			},
+			transformer: (token) => {
+				const value = parseFloat(token.value);
+				if (isNaN(value))
+				{
+					return token.value;
+				}
+
+				return (value * 100) + '%';
+			},
+		},
+		'figma/line-height': {
+			type: 'value',
+			matcher: (prop) => {
+				return prop.attributes.category === 'font' && prop.attributes.type === 'line-height';
+			},
+			transformer: (token) => {
+				const value = parseFloat(token.value);
+				if (isNaN(value))
+				{
+					return token.value;
+				}
+
+				return (value * 100) + '%';
+			},
+		},
+
 	},
 	transformGroup: {
-		'ui-design-tokens': [
+		'css-design-tokens': [
 			'attribute/cti',
 			'name/cti/kebab',
 			'time/seconds',
 			'content/icon',
-			'color/css',
-		]
+			'css/shadow',
+			'rgb-color-value',
+		],
+		'figma-design-tokens': [
+			'attribute/cti',
+			'name/cti/kebab',
+			'rgb-color-value',
+			'figma/line-height',
+			'figma/font-weight',
+			'figma/letter-spacing',
+		],
 	},
 	format: {
-		typography: ({dictionary, platform}) => {
+		cssFormat: ({dictionary, file, options={}}) => {
+			const selector = options.selector ? options.selector : `:root`;
+			const { outputReferences } = options;
+			const formatProperty = createPropertyFormatter({
+				outputReferences,
+				dictionary,
+				format: 'css',
+				/*formatting: {
+					prefix: '--',
+					commentStyle: 'long',
+					indentation: '\t',
+					separator: ':',
+					suffix: ';',
+				}*/
+			});
 
-			const tokens = dictionary.tokens;
-			//const tokens = dictionary.tokens.filter(token => token.attributes.category === 'typography');
+			const formatColor = (token) => {
+				const prop = formatProperty(token);
+				if (token.value === 'transparent' || token.value === 'none')
+				{
+					return `${prop}\n`;
+				}
 
-			let result = '';
-			Object.keys(tokens.typography).forEach(category => {
-				Object.keys(tokens.typography[category]).forEach((item) => {
-					const props = tokens.typography[category][item];
+				let propRgb = prop
+					.replace(/(--[^:]+):/, '$1-rgb:')
+					.replace(/:(\s*var\([^)]+)/, ':$1-rgb')
+				;
+
+				if (!/var\(/.test(prop))
+				{
+					const color = Color(token.value);
+					if (color.isValid() && color.getAlpha() === 1)
+					{
+						propRgb = propRgb.replace(token.value, `${color._r}, ${color._g}, ${color._b}`);
+					}
+					else
+					{
+						propRgb = '';
+					}
+				}
+
+				return `${prop}\n${propRgb === '' ? '' : propRgb + '\n' }`;
+			};
+
+			// Variables
+			let result = `${fileHeader({file})}${selector} {\n`;
+			dictionary.allTokens.sort(sortByReference(dictionary)).forEach(token => {
+				if (token.attributes.category === 'color')
+				{
+					result += formatColor(token);
+				}
+				else
+				{
+					const prop = formatProperty(token);
+					result += `${prop}\n`;
+				}
+			});
+			result +=`}\n\n`;
+
+			// Typography
+			const typography = dictionary.tokens.typography;
+			Object.keys(typography).forEach(category => {
+				Object.keys(typography[category]).forEach((item) => {
+					const props = typography[category][item];
 					result += `.ui-typography-${category}-${item} {\n`;
 					Object.keys(props).forEach(prop => {
 						const propData = props[prop];
@@ -45,69 +187,127 @@ module.exports = {
 					});
 					result += `}\n\n`;
 				});
-
-
 			});
 
 			return result;
 		},
-	},
-	action: {
-		makeBundle: {
-			do: (dictionary, config) => {
-				const bundleDir = __dirname + '/../dist';
-				if (!fs.existsSync(bundleDir))
+		figmaFormat: ({dictionary}) => {
+			const minifyDictionary = (obj) => {
+				if (typeof obj !== 'object' || Array.isArray(obj))
 				{
-					fs.mkdirSync(bundleDir, { recursive: true });
+					return obj;
 				}
 
-				const bundleFile = bundleDir + '/ui.design-tokens.bundle.css';
-				if (fs.existsSync(bundleFile))
+				const result = {};
+				if (obj.hasOwnProperty('ignoreFigma'))
 				{
-					fs.unlinkSync(bundleFile);
+					return null;
 				}
-
-				const buildDir = __dirname + '/build';
-				//const files = fs.readdirSync(buildDir);
-				const files = config.files.map(file => file.destination);
-
-				files.forEach((file) => {
-					const filePath = buildDir + '/' + file;
-					if (fs.lstatSync(filePath).isFile())
+				else if (obj.hasOwnProperty('value'))
+				{
+					if (obj.figmaValue)
 					{
-						fs.appendFileSync(bundleFile, fs.readFileSync(filePath).toString());
+						return { value: obj.figmaValue };
 					}
+					else
+					{
+						const value = /\{.+\}/.test(obj.original.value) ? obj.original.value : obj.value;
+
+						return { value };
+					}
+				}
+				else
+				{
+					for (const name in obj)
+					{
+						if (obj.hasOwnProperty(name))
+						{
+							const value = minifyDictionary(obj[name]);
+							if (value !== null)
+							{
+								result[name] = minifyDictionary(obj[name]);
+							}
+						}
+					}
+				}
+
+				return result;
+			}
+			const toCamelCase = (str) => {
+				const regex = /[-_\s]+(.)?/g;
+				if (!regex.test(str))
+				{
+					return str.match(/^[A-Z]+$/) ? str.toLowerCase() : str[0].toLowerCase() + str.slice(1);
+				}
+
+				str = str.toLowerCase();
+				str = str.replace(regex, (match, letter) => {
+					return letter ? letter.toUpperCase() : '';
 				});
 
-			},
-			undo: () => {
+				return str[0].toLowerCase() + str.substr(1);
+			}
 
-			},
-		}
+			const typo = { type: 'typography' };
+			const typography = dictionary.tokens.typography;
+			Object.keys(typography).forEach(category => {
+				typo[category] = {};
+				Object.keys(typography[category]).forEach((item) => {;
+					const complexValue = {};
+					const props = typography[category][item];
+					Object.keys(props).forEach(prop => {
+						const propData = props[prop];
+						complexValue[toCamelCase(prop)] = propData.original.value;
+					});
+
+					typo[category][item] = { value: complexValue };
+				});
+			});
+
+			const result = minifyDictionary(dictionary.tokens);
+			result.typography = typo;
+
+			return JSON.stringify({ Bitrix24: result }, null, '\t');
+		},
 	},
 	platforms: {
 		css: {
-			transformGroup: 'ui-design-tokens',
+			transformGroup: 'css-design-tokens',
 			prefix: 'ui',
-			buildPath: 'build/',
+			buildPath: '../dist/',
 			outputReferences: true,
 			files: [
 				{
-					destination: 'variables.css',
-					format: 'css/variables',
+					destination: 'ui.design-tokens.css',
+					format: 'cssFormat',
 					options: {
-						"outputReferences": true
-					}
-				},
-				{
-					destination: 'typography.css',
-					format: 'typography',
-					filter: (token) => {
-						return token.attributes.category === 'typography';
+						outputReferences: true,
 					},
 				}
 			],
-			actions: ['makeBundle'],
+		},
+		figma: {
+			transformGroup: 'figma-design-tokens',
+			buildPath: '../dist/',
+			outputReferences: true,
+			files: [
+				{
+					destination: 'figma-tokens.json',
+					format: 'figmaFormat',
+					/*filter: (token) => {
+						if (
+							token.attributes.category === 'text'
+							&& token.attributes.type === 'decoration'
+							&& token.attributes.item === 'style'
+						)
+						{
+							return false;
+						}
+
+						return true;
+					}*/
+				}
+			],
 		},
 	},
 };

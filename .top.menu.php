@@ -1,46 +1,47 @@
 <?
 $aMenuLinks = Array(
 	Array(
-		"Главная", 
-		"/", 
+		"Блоги", 
+		"blogs/", 
 		Array(), 
 		Array(), 
 		"" 
 	),
 	Array(
-		"Профиль", 
-		"/personal/", 
+		"Работа", 
+		"job/", 
 		Array(), 
 		Array(), 
 		"" 
 	),
 	Array(
-		"Контент", 
-		"/content/", 
+		"Фото", 
+		"photo/", 
 		Array(), 
 		Array(), 
 		"" 
 	),
 	Array(
-		"Магазин", 
-		"/e-store/", 
+		"Объявления", 
+		"board/", 
 		Array(), 
 		Array(), 
 		"" 
 	),
 	Array(
-		"Общение", 
-		"/communication/", 
+		"Форум", 
+		"forum/", 
 		Array(), 
 		Array(), 
 		"" 
 	),
 	Array(
-		"Типовые примеры", 
-		"/examples/", 
+		"События", 
+		"events-calendar/", 
 		Array(), 
 		Array(), 
 		"" 
-	)
+	),
+	
 );
 ?>

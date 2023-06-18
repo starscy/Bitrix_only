@@ -19,7 +19,13 @@ use Bitrix\Main\Web\Json;
 use Bitrix\Main\UI\Extension;
 
 Loader::includeModule('ui');
-Extension::load(array("ui.tilegrid", "ui.buttons"));
+
+Extension::load([
+	"ui.tilegrid",
+	"ui.buttons",
+	"ui.design-tokens",
+	"ui.fonts.opensans",
+]);
 
 if ($arParams['NO_BACKGROUND'] == "Y")
 {

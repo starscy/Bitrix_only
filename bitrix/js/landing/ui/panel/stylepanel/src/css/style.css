@@ -7,6 +7,11 @@
 	transform: translateX(0) translateZ(0);
 	opacity: 0;
 	z-index: 22!important;
+	margin-top: 0;
+}
+
+.landing-ui-panel-style.landing-ui-style-form-mode {
+	z-index: 9999!important;
 }
 
 .landing-ui-panel-style .landing-ui-panel-content-body-content {
@@ -19,6 +24,10 @@
 }
 
 .landing-ui-panel-style .landing-ui-panel-content-body {
+	height: 100vh !important;
+}
+
+.landing-ui-panel-style .landing-ui-panel-content-body:not(.landing-ui-panel-content-body_long) {
 	height: calc(100vh - 198px) !important;
 }
 
@@ -62,7 +71,8 @@
 
 
 .landing-ui-panel-style-header {
-	font-family: OpenSans-Light;
+	font-family: var(--ui-font-family-secondary, var(--ui-font-family-open-sans));
+	font-weight: var(--ui-font-weight-light, 300);
 	font-size: 24px;
 	color: #000000;
 	line-height: 24px;
@@ -80,11 +90,11 @@
 	right: 0;
 }
 
-.landing-ui-panel-style.landing-ui-show ~ .landing-ui-view-wrapper {
+.landing-ui-panel-style:not(.landing-ui-style-form-mode).landing-ui-show ~ .landing-ui-view-wrapper {
 	animation: frameResizeIn 300ms ease both;
 }
 
-.landing-ui-panel-style.landing-ui-hide ~ .landing-ui-view-wrapper {
+.landing-ui-panel-style:not(.landing-ui-style-form-mode).landing-ui-hide ~ .landing-ui-view-wrapper {
 	animation: frameResizeOut 300ms ease both;
 }
 

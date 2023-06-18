@@ -10,6 +10,7 @@ return array(
 	'block' => array(
 		'name' => Loc::getMessage('LANDING_BLOCK_6_IMAGE_CAROUSEL_6_COLS_FIX_NAME'),
 		'section' => array('image', 'partners'),
+		'type' => 'null',
 		'dynamic' => false,
 	),
 	'cards' => array(
@@ -40,6 +41,12 @@ return array(
 				'name' => Loc::getMessage('LANDING_BLOCK_6_IMAGE_CAROUSEL_6_COLS_FIX_CARDS_LANDINGBLOCKCARDCAROUSELITEM'),
 				'type' => ['row-align-column', 'align-items-column']
 			),
+			'.landing-block-slider' => [
+				'additional' => [
+					'name' => Loc::getMessage('LANDING_BLOCK_6_IMAGE_CAROUSEL_6_COLS_FIX_NODES_SLIDER'),
+					'attrsType' => ['autoplay', 'autoplay-speed', 'animation', 'pause-hover', 'slides-show-extended', 'arrows', 'dots'],
+				]
+			],
 		),
 	),
 	'assets' => array(

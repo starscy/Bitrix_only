@@ -27,6 +27,10 @@ class Landing extends \CModule
 
 	public $docRoot = '';
 	public $eventsData = [
+		'ai' => [
+			'onTuningLoad' => ['\Bitrix\Landing\Connector\Ai', 'onTuningLoad'],
+			'onBeforeCompletions' => ['\Bitrix\Landing\Connector\Ai', 'onBeforeCompletions'],
+		],
 		'crm' => [
 			'onAfterCrmCompanyAdd' => ['\Bitrix\Landing\Connector\Crm', 'onAfterCompanyChange'],
 			'onAfterCrmCompanyUpdate' => ['\Bitrix\Landing\Connector\Crm', 'onAfterCompanyChange']
@@ -43,7 +47,8 @@ class Landing extends \CModule
 		'main' => [
 			'onBeforeSiteDelete' => ['\Bitrix\Landing\Site', 'onBeforeMainSiteDelete'],
 			'onSiteDelete' => ['\Bitrix\Landing\Site', 'onMainSiteDelete'],
-			'onUserConsentProviderList' => ['\Bitrix\Landing\Site\Cookies', 'onUserConsentProviderList']
+			'onUserConsentProviderList' => ['\Bitrix\Landing\Site\Cookies', 'onUserConsentProviderList'],
+			'OnAfterFileDeleteDuplicate' => ['\Bitrix\Landing\Update\Block\DuplicateImages', 'onAfterFileDeleteDuplicate'],
 		],
 		'mobile' => [
 			'onMobileMenuStructureBuilt' => ['\Bitrix\Landing\Connector\Mobile', 'onMobileMenuStructureBuilt']
@@ -66,7 +71,8 @@ class Landing extends \CModule
 		'socialnetwork' => [
 			'onFillSocNetFeaturesList' => ['\Bitrix\Landing\Connector\SocialNetwork', 'onFillSocNetFeaturesList'],
 			'onFillSocNetMenu' => ['\Bitrix\Landing\Connector\SocialNetwork', 'onFillSocNetMenu'],
-			'onSocNetGroupDelete' => ['\Bitrix\Landing\Connector\SocialNetwork', 'onSocNetGroupDelete']
+			'onSocNetGroupDelete' => ['\Bitrix\Landing\Connector\SocialNetwork', 'onSocNetGroupDelete'],
+			'onSocNetFeaturesUpdate' => ['\Bitrix\Landing\Connector\SocialNetwork', 'onSocNetFeaturesUpdate'],
 		],
 	];
 	public $installDirs = array(

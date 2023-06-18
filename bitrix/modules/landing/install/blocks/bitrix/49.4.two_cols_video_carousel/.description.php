@@ -29,6 +29,16 @@ return array(
 			'name' => Loc::getMessage('LANDING_BLOCK_49_4_TWO_COLS_VIDEO_CAROUSEL--LANDINGBLOCKNODECARDVIDEO'),
 			'type' => 'animation',
 		),
+		'.landing-block-slider' => [
+			'additional' => [
+				'name' => Loc::getMessage('LANDING_BLOCK_49_4_TWO_COLS_VIDEO_CAROUSEL_SLIDER'),
+				'attrsType' => ['autoplay', 'autoplay-speed', 'animation', 'pause-hover', 'slides-show', 'dots'],
+			]
+		],
+		'.landing-block-node-video-container' => [
+			'name' => Loc::getMessage('LANDING_BLOCK_49_4_TWO_COLS_VIDEO_CAROUSEL--LANDINGBLOCKNODECARDVIDEO'),
+			'type' => ['orientation', 'video-scale'],
+		],
 	),
 	'assets' => array(
 		'ext' => array('landing_inline_video', 'landing_carousel'),

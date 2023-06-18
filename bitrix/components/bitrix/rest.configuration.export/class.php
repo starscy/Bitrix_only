@@ -22,7 +22,6 @@ use Bitrix\Main\Security\Random;
 use Bitrix\Main\Web\Json;
 use Bitrix\Main\FileTable;
 use Bitrix\Main\Web\HttpClient;
-use CFile;
 
 class CRestConfigurationExportComponent extends CBitrixComponent implements Controllerable
 {
@@ -31,6 +30,12 @@ class CRestConfigurationExportComponent extends CBitrixComponent implements Cont
 	protected $type = 'configuration';
 	protected $contextPostfix = 'export';
 	protected $optionPath = '~tmp_export_path_configuration';
+
+	public function __construct($component = null)
+	{
+		parent::__construct($component);
+		$this->errors = new ErrorCollection();
+	}
 
 	protected function checkRequiredParams()
 	{
@@ -84,7 +89,6 @@ class CRestConfigurationExportComponent extends CBitrixComponent implements Cont
 		if($result['ENABLED_ZIP_MODE'] != 'Y')
 		{
 			$result['REST_SETTING_PATH'] = BX_ROOT.'/admin/settings.php?lang='.LANGUAGE_ID.'&mid=rest';
-
 		}
 
 		$this->arResult = $result;
@@ -204,6 +208,12 @@ class CRestConfigurationExportComponent extends CBitrixComponent implements Cont
 		$context = $this->getContext();
 		$structure = new Structure($context);
 		$fileList = $structure->getFileList();
+
+		if (empty($fileList))
+		{
+			return $result;
+		}
+
 		$list = [];
 		foreach ($fileList as $key => $file)
 		{
@@ -212,6 +222,11 @@ class CRestConfigurationExportComponent extends CBitrixComponent implements Cont
 				$file['TMP_ID'] = (int)$key;
 				$list[$file['ID']] = $file;
 			}
+		}
+
+		if (empty($list))
+		{
+			return $result;
 		}
 
 		$res = FileTable::getList(
@@ -425,7 +440,19 @@ class CRestConfigurationExportComponent extends CBitrixComponent implements Cont
 					$fileName = !is_array($item['FILE_NAME']) ? (string) $item['FILE_NAME'] : '';
 					if ($fileName <> '')
 					{
-						$structure->saveContent($code, $fileName, $item['CONTENT']);
+						$saveResult = $structure->saveContent($code, $fileName, $item['CONTENT']);
+						if (is_array($saveResult))
+						{
+							foreach ($saveResult as $error)
+							{
+								$item['ERROR_EXCEPTION'][] = $error;
+							}
+						}
+					}
+
+					if ($item['ERROR_EXCEPTION'])
+					{
+						$result['exception'] = $item['ERROR_EXCEPTION'];
 					}
 					if ($item['ERROR_MESSAGES'])
 					{

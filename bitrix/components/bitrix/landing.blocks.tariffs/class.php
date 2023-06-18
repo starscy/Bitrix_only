@@ -4,12 +4,12 @@ if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED !== true)
 	die();
 }
 
-use \Bitrix\Landing\Manager;
-use \Bitrix\Main\Application;
-use \Bitrix\Main\Config\Option;
-use \Bitrix\Main\Loader;
+use Bitrix\Landing\Manager;
+use Bitrix\Main\Application;
+use Bitrix\Main\Config\Option;
+use Bitrix\Main\Loader;
 
-class LandingBlocksTariffsComponent extends \CBitrixComponent
+class LandingBlocksTariffsComponent extends CBitrixComponent
 {
 	/**
 	 * Base executable method.
@@ -17,28 +17,28 @@ class LandingBlocksTariffsComponent extends \CBitrixComponent
 	 */
 	public function executeComponent(): void
 	{
-		if (!\Bitrix\Main\Loader::includeModule('landing'))
+		if (!Loader::includeModule('landing'))
 		{
 			return;
 		}
 
 		$zone = $this->getZone();
-		if ($zone === 'by')
-		{
-			$currencyCode = 'BYR';
-		}
-		if ($zone === 'kz')
-		{
-			$currencyCode = 'KZT';
-		}
-		if ($zone === 'ua')
-		{
-			$currencyCode = 'UAH';
-		}
-		if (!isset($currencyCode))
-		{
-			$currencyCode = 'RUR';
-		}
+		// if ($zone === 'by')
+		// {
+		// 	$currencyCode = 'BYR';
+		// }
+		// if ($zone === 'kz')
+		// {
+		// 	$currencyCode = 'KZT';
+		// }
+		// if ($zone === 'ua')
+		// {
+		// 	$currencyCode = 'UAH';
+		// }
+		// if (!isset($currencyCode))
+		// {
+		// 	$currencyCode = 'RUR';
+		// }
 
 		if (Manager::isB24())
 		{
@@ -46,14 +46,14 @@ class LandingBlocksTariffsComponent extends \CBitrixComponent
 		}
 		else
 		{
-			$partnerId = (int)COption::GetOptionString("main", "~PARAM_PARTNER_ID");
+			$partnerId = Application::getInstance()->getLicense()->getPartnerId();
 		}
 
 		$this->arParams['OPTION'] = [
 			'productTypeCode' => 'CLOUD',
 			'locationAreaId' => $zone,
 			'languageId' => LANGUAGE_ID,
-			'currencyCode' => $currencyCode,
+			// 'currencyCode' => $currencyCode,
 			'catalogForNewCustomer' => false,
 			'partnerId' => $partnerId,
 			'replace' => [
@@ -78,7 +78,7 @@ class LandingBlocksTariffsComponent extends \CBitrixComponent
 	{
 		if (Loader::includeModule('bitrix24'))
 		{
-			$zone = \CBitrix24::getPortalZone();
+			$zone = CBitrix24::getPortalZone();
 		}
 		if (!isset($zone) || !$zone)
 		{

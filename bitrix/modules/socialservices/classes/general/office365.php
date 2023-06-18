@@ -26,7 +26,9 @@ class CSocServOffice365OAuth extends CSocServAuth
 			array("office365_appid", GetMessage("socserv_office365_client_id"), "", Array("text", 40)),
 			array("office365_appsecret", GetMessage("socserv_office365_client_secret"), "", Array("text", 40)),
 			array("office365_tenant", GetMessage("socserv_office365_tenant"), "", Array("text", 40)),
-			array("note"=>GetMessage("socserv_office365_form_note", array('#URL#'=>$this->getEntityOAuth()->getRedirectUri()))),
+			array("note"=>GetMessage("socserv_office365_form_note", array(
+				'#URL#'	=>	$this->getEntityOAuth()->getRedirectUri(),
+				'#MAIL_URL#'	=> \CHttp::urn2uri('/bitrix/tools/mail_oauth.php')))),
 		);
 	}
 
@@ -53,18 +55,17 @@ class CSocServOffice365OAuth extends CSocServAuth
 	{
 		global $APPLICATION;
 
-		CSocServAuthManager::SetUniqueKey();
 		if(IsModuleInstalled('bitrix24') && defined('BX24_HOST_NAME'))
 		{
 			$redirect_uri = self::CONTROLLER_URL."/redirect.php";
 			$state = $this->getEntityOAuth()->getRedirectUri()."?state=";
-			$backurl = urlencode($GLOBALS["APPLICATION"]->GetCurPageParam('check_key='.$_SESSION["UNIQUE_KEY"], array("logout", "auth_service_error", "auth_service_id", "backurl"))).(isset($arParams['BACKURL']) ? '&redirect_url='.urlencode($arParams['BACKURL']) : '').'&mode='.$location;
+			$backurl = urlencode($GLOBALS["APPLICATION"]->GetCurPageParam('check_key='.\CSocServAuthManager::getUniqueKey(), array("logout", "auth_service_error", "auth_service_id", "backurl"))).(isset($arParams['BACKURL']) ? '&redirect_url='.urlencode($arParams['BACKURL']) : '').'&mode='.$location;
 			$state .= urlencode(urlencode("backurl=".$backurl));
 		}
 		else
 		{
 			$backurl = $APPLICATION->GetCurPageParam(
-				'check_key='.$_SESSION["UNIQUE_KEY"],
+				'check_key='.\CSocServAuthManager::getUniqueKey(),
 				array("logout", "auth_service_error", "auth_service_id", "backurl")
 			);
 
@@ -284,7 +285,7 @@ class CSocServOffice365OAuth extends CSocServAuth
 
 		echo $JSScript;
 
-		die();
+		CMain::FinalActions();
 	}
 
 	public function getProfileUrl($id)
@@ -308,7 +309,10 @@ class COffice365OAuthInterface extends CSocServOAuthTransport
 	const REDIRECT_URI = "/bitrix/tools/oauth/office365.php";
 
 	protected $resource = "https://graph.microsoft.com";
-	protected $scope = ["User.Read"];
+	protected $scope = [
+		"User.Read",
+		"offline_access",
+	];
 
 	public function __construct($appID = false, $appSecret = false, $code=false)
 	{
@@ -487,7 +491,7 @@ class COffice365OAuthInterface extends CSocServOAuthTransport
 		$tokenInfo = $this->getStorageTokens();
 		if($tokenInfo && $tokenInfo["PERMISSIONS"])
 		{
-			$permissions = unserialize($tokenInfo["PERMISSIONS"]);
+			$permissions = unserialize($tokenInfo["PERMISSIONS"], ["allowed_classes" => false]);
 
 			return $permissions["tenant"];
 		}

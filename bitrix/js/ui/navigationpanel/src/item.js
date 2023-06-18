@@ -3,15 +3,16 @@ import { EventEmitter } from "main.core.events";
 
 export default class NavigationItem
 {
-	constructor(options)
+	constructor({ id, title, active, events, link, locked })
 	{
-		this.id = options.id;
-		this.title = Type.isString(options.title) ? options.title : null;
-		this.active = Type.isBoolean(options.active) ? options.active : false;
-		this.events = options.events ? options.events : null;
-		this.link = options.link ? options.link : null;
+		this.id = id ? id : null;
+		this.title = Type.isString(title) ? title : null;
+		this.active = Type.isBoolean(active) ? active : false;
+		this.events = events ? events : null;
+		this.link = link ? link : null;
+		this.locked = Type.isBoolean(locked) ? locked : false;
 
-		this.container = null;
+		this.linkContainer = null;
 
 		this.bindEvents();
 	}
@@ -30,20 +31,22 @@ export default class NavigationItem
 
 	getContainer()
 	{
-		if (!this.container)
+		if (!this.linkContainer)
 		{
-			this.container = Tag.render`
-				<div class="ui-nav-panel__item">
+			const id = this.id ? `id="ui-nav-panel-item-${this.id}"` : '';
+			this.linkContainer = Tag.render`
+				<div ${id} class="ui-nav-panel__item">
 					${this.title ? this.getTitle() : ''}
 				</div>
 			`;
 
 			this.active ? this.activate() : this.inactivate();
+			this.locked ? this.lock() : this.unLock();
 
 			this.setEvents();
 		}
 
-		return this.container;
+		return this.linkContainer;
 	}
 
 	bindEvents()
@@ -54,6 +57,23 @@ export default class NavigationItem
 				this.inactivate();
 			}
 		});
+	}
+
+	isLocked()
+	{
+		return this.locked;
+	}
+
+	lock()
+	{
+		this.locked = true;
+		this.getContainer().classList.add('--locked');
+	}
+
+	unLock()
+	{
+		this.locked = false;
+		this.getContainer().classList.remove('--locked');
 	}
 
 	setEvents()

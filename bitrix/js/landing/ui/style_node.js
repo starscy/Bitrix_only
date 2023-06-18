@@ -3,8 +3,7 @@
 
 	BX.namespace("BX.Landing.UI");
 
-
-	var isString = BX.Landing.Utils.isString;
+	const slice = BX.Landing.Utils.slice;
 
 	/**
 	 * Implements interface for works with style node
@@ -37,6 +36,12 @@
 		this.onFrameLoad();
 	};
 
+	BX.Landing.UI.Style.SERVICE_CLASSES = [
+		'landing-card',
+		'slick-slide',
+		'slick-current',
+		'slick-active',
+	];
 
 	BX.Landing.UI.Style.prototype = {
 		/**
@@ -66,7 +71,7 @@
 
 		getNode: function(all)
 		{
-			var elements = [].slice.call(this.iframe.document.querySelectorAll(this.relativeSelector));
+			const elements = slice(this.iframe.document.querySelectorAll(this.relativeSelector));
 
 			if (this.isSelectGroup() || all)
 			{
@@ -190,7 +195,15 @@
 		 */
 		isChanged: function()
 		{
-			return JSON.stringify(this.value) !== JSON.stringify(this.getValue());
+			const currentValue = this.getValue();
+			if (JSON.stringify(this.value) !== JSON.stringify(currentValue))
+			{
+				return true;
+			}
+			else
+			{
+				return this.lastValue !== undefined && JSON.stringify(this.lastValue) !== JSON.stringify(currentValue);
+			}
 		},
 
 		/**
@@ -210,6 +223,9 @@
 					this.inlineProperties.push(prop);
 				}
 			}, this);
+
+			// recalculate value after changes
+			this.value = this.getValue();
 		},
 
 		/**
@@ -229,6 +245,9 @@
 					this.computedProperties.push(prop);
 				}
 			}, this);
+
+			// recalculate value after changes
+			this.value = this.getValue();
 		},
 
 		/**
@@ -238,6 +257,9 @@
 		setPseudoElement: function(pseudo)
 		{
 			this.pseudoElement = pseudo;
+
+			// recalculate value after changes
+			this.value = this.getValue();
 		},
 
 		/**
@@ -250,7 +272,8 @@
 		 */
 		setValue: function(value, items, postfix, affect, exclude)
 		{
-			this.lastValue = this.lastValue || this.getValue();
+			this.lastValue = this.currentValue;
+			this.currentValue = this.getValue();
 
 			if(!value)
 			{
@@ -260,10 +283,7 @@
 			affect = !!affect ? affect : "";
 			if (affect.length)
 			{
-				if (affect !== "background-image")
-				{
-					this.affects.add(affect);
-				}
+				this.setAffects(affect);
 			}
 
 			if (BX.type.isObjectLike(value))
@@ -313,7 +333,7 @@
 				{
 					if (affect !== "background-image")
 					{
-						[].slice.call(node.querySelectorAll("*")).forEach(function(child) {
+						slice(node.querySelectorAll("*")).forEach(function(child) {
 							child.style[affect] = null;
 							if (affect === "color")
 							{
@@ -331,6 +351,21 @@
 					});
 				}
 			}, this);
+		},
+
+		/**
+		 *
+		 * @param {string|[string]} affects
+		 */
+		setAffects(affects)
+		{
+			affects = BX.Type.isArray(affects) ? affects : [affects];
+			affects.forEach(affect => {
+				if (affect !== "background-image")
+				{
+					this.affects.add(affect);
+				}
+			})
 		},
 
 		setValueClass: function(node, value, items, affect) {
@@ -375,50 +410,67 @@
 		 */
 		getValue: function(isNeedComputed)
 		{
-			var node = this.getNode().length ? this.getNode()[0] : null;
+			const node = this.getNode().length ? this.getNode()[0] : null;
+			const style = {};
 			if (node)
 			{
-				var style = {};
-				var isAllInlineProps = false;
+				let isAllInlineProps = false;
 				if (this.inlineProperties.length)
 				{
 					isAllInlineProps = true;
-					var styleObj = node.style;
-					this.inlineProperties.forEach(function (prop) {
+					const styleObj = node.style;
+					this.inlineProperties.forEach(prop => {
 						style[prop] = styleObj.getPropertyValue(prop).trim() || null;
+						if (prop === 'background-image' && !!style[prop])
+						{
+							style[prop] = style[prop].replaceAll('"', '\'');
+						}
 						isAllInlineProps = isAllInlineProps && !!style[prop];
 					});
 				}
 				if (!!isNeedComputed && this.computedProperties.length && !isAllInlineProps)
 				{
-					this.computedProperties.forEach(function (prop) {
+					this.computedProperties.forEach(prop => {
 						style[prop] =
 							getComputedStyle(node, this.pseudoElement).getPropertyValue(prop)
 							|| null;
-					}.bind(this));
+					});
 				}
 			}
+
 			return {
-				classList: node ? node.className.split(" ") : [],
+				classList: node ? this.sanitizeClassList(slice(node.classList)) : [],
 				affect: this.affects.toArray(),
-				style: style || {},
+				style: style,
 			};
 		},
 
 		/**
-		 * Gets style in special format for save to history entry
+		 * Remove service classes from class list
+		 * @param {[string]} classes
+		 * @returns {[string]} - array without service classes
 		 */
-		getValueForHistory: function ()
+		sanitizeClassList: function(classes)
 		{
-			var value = {className: "", style: ""};
+			const result = [];
+			classes.forEach(classItem => {
+				if (BX.Landing.UI.Style.SERVICE_CLASSES.indexOf(classItem) === -1)
+				{
+					result.push(classItem);
+				}
+			});
 
-			if (this.node[0])
-			{
-				value.className = this.node[0].className;
-				value.style = this.node[0].style.cssText;
-			}
+			return result;
+		},
 
-			return value;
-		}
+		/**
+		 * Remove service classes from classes string
+		 * @param {string} classes
+		 * @returns {string} - classes string without service classes
+		 */
+		sanitizeClassName: function(classes)
+		{
+			return this.sanitizeClassList(classes.split(' ')).join(' ');
+		},
 	};
 })();

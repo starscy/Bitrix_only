@@ -52,6 +52,4 @@ if($arLocation = $dbLocation->Fetch())//if there are no data in module
 	}
 	$_SESSION["ZIP_POST"] = $csvFile->GetPos();
 
-	$DB->Commit();	
 }
-?>

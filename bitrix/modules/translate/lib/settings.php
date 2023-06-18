@@ -1,4 +1,4 @@
-<?php declare(strict_types = 1);
+<?php
 
 namespace Bitrix\Translate;
 
@@ -43,7 +43,7 @@ class Settings
 		}
 
 		$file = null;
-		if (mb_substr($fullPath, -5) === '/lang' || mb_substr($fullPath, -6) === '/lang/')
+		if (\mb_substr($fullPath, -5) === '/lang' || \mb_substr($fullPath, -6) === '/lang/')
 		{
 			$file = new static($fullPath. '/'. self::FILE_NAME);
 		}
@@ -108,7 +108,7 @@ class Settings
 			$options = $this->options['*'];
 		}
 
-		if (preg_match("#^(.*?/lang/)([^/]+)/+(.+)#".(Translate\Config::isUtfMode() ? 'u' : ''), $langPath, $parts))
+		if (\preg_match("#^(.*?/lang/)([^/]+)/+(.+)#".(Translate\Config::isUtfMode() ? 'u' : ''), $langPath, $parts))
 		{
 			$langPath = $parts[3];
 		}
@@ -119,9 +119,9 @@ class Settings
 		}
 		else
 		{
-			if (mb_strpos($langPath, '/') !== false)
+			if (\mb_strpos($langPath, '/') !== false)
 			{
-				$parts = explode('/', $langPath);
+				$parts = \explode('/', $langPath);
 				$path = '';
 				foreach ($parts as $part)
 				{
@@ -160,11 +160,11 @@ class Settings
 
 		$options = include $this->getPhysicalPath();
 
-		if (is_array($options) && count($options) > 0)
+		if (\is_array($options) && \count($options) > 0)
 		{
 			$this->options = $options;
-			$this->optionCodes = array_keys($options);
-			$this->optionsCount = count($options);
+			$this->optionCodes = \array_keys($options);
+			$this->optionsCount = \count($options);
 		}
 
 		return true;
@@ -175,32 +175,50 @@ class Settings
 	 * Save changes or create new file.
 	 *
 	 * @return boolean
+	 * @throws Main\IO\IoException
 	 */
 	public function save(): bool
 	{
 		$content = '';
 		if ($this->count() > 0)
 		{
-			$content = var_export($this->options, true);
-			$content = preg_replace("/^[ ]{6}(.*)/m", "\t\t\t$1", $content);
-			$content = preg_replace("/^[ ]{4}(.*)/m", "\t\t$1", $content);
-			$content = preg_replace("/^[ ]{2}(.*)/m", "\t$1", $content);
-			$content = str_replace(["\r\n", "\r"], ["\n", ''], $content);
+			$content = \var_export($this->options, true);
+			$content = \preg_replace("/^[ ]{6}(.*)/m", "\t\t\t$1", $content);
+			$content = \preg_replace("/^[ ]{4}(.*)/m", "\t\t$1", $content);
+			$content = \preg_replace("/^[ ]{2}(.*)/m", "\t$1", $content);
+			$content = \str_replace(["\r\n", "\r"], ["\n", ''], $content);
 		}
 
-		if ($content <> '')
-		{
-			if (parent::putContents("<". "?php\nreturn ". $content. "\n?". '>') === false)
+		\set_error_handler(
+			function ($severity, $message, $file, $line)
 			{
-				$filePath = $this->getPath();
-				throw new Main\IO\IoException("Couldn't write option file '{$filePath}'");
+				throw new \ErrorException($message, $severity, $severity, $file, $line);
+			}
+		);
+
+		try
+		{
+			if ($content <> '')
+			{
+				if (parent::putContents("<". "?php\nreturn ". $content. "\n?". '>') === false)
+				{
+					$filePath = $this->getPath();
+					throw new Main\IO\IoException("Couldn't write option file '{$filePath}'");
+				}
+			}
+			elseif ($this->isExists())
+			{
+				$this->markWritable();
+				$this->delete();
 			}
 		}
-		elseif ($this->isExists())
+		catch (\ErrorException $exception)
 		{
-			$this->markWritable();
-			$this->delete();
+			\restore_error_handler();
+			throw new Main\IO\IoException($exception->getMessage());
 		}
+
+		\restore_error_handler();
 
 		return true;
 	}
@@ -210,8 +228,6 @@ class Settings
 	//region ArrayAccess
 
 	/**
-	 * Checks existence of the phrase by its code.
-	 *
 	 * @param string $code Phrase code.
 	 *
 	 * @return boolean
@@ -222,13 +238,12 @@ class Settings
 	}
 
 	/**
-	 * Returns phrase by its code.
-	 *
 	 * @param string $code Phrase code.
 	 *
 	 * @return string|null
 	 */
-	public function offsetGet($code): ?string
+	#[\ReturnTypeWillChange]
+	public function offsetGet($code)
 	{
 		if (isset($this->options[$code]))
 		{
@@ -272,6 +287,7 @@ class Settings
 	 *
 	 * @return array|null
 	 */
+	#[\ReturnTypeWillChange]
 	public function current()
 	{
 		$code = $this->optionCodes[$this->dataPosition];
@@ -318,7 +334,7 @@ class Settings
 	public function rewind(): void
 	{
 		$this->dataPosition = 0;
-		$this->optionCodes = array_keys($this->options);
+		$this->optionCodes = \array_keys($this->options);
 	}
 
 	//endregion
@@ -336,17 +352,17 @@ class Settings
 	{
 		if ($this->optionsCount === null)
 		{
-			if ($this->options !== null && count($this->options) > 0)
+			if ($this->options !== null && \count($this->options) > 0)
 			{
-				$this->optionsCount = count($this->options);
+				$this->optionsCount = \count($this->options);
 			}
 			elseif ($allowDirectFileAccess)
 			{
 				$options = include $this->getPhysicalPath();
 
-				if (is_array($options) && count($options) > 0)
+				if (\is_array($options) && \count($options) > 0)
 				{
-					$this->optionsCount = count($options);
+					$this->optionsCount = \count($options);
 				}
 			}
 		}

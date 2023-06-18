@@ -108,7 +108,5 @@ if(!$dbLocation->Fetch())//if there are no data in module
 			$_SESSION["LOC_POST"] = $csvFile->GetPos();
 		}
 		$_SESSION["LOC_POST"] = $csvFile->GetPos();
-		$DB->Commit();
 	}
 }
-?>

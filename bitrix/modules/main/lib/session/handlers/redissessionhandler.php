@@ -10,12 +10,10 @@ class RedisSessionHandler extends AbstractSessionHandler
 {
 	public const SESSION_REDIS_CONNECTION = 'session.redis';
 
-	/** @var \Redis $connection */
+	/** @var \Redis | \RedisCluster $connection */
 	protected $connection;
-	/** @var string */
-	protected $prefix;
-	/** @var bool */
-	protected $exclusiveLock;
+	protected string $prefix;
+	protected bool $exclusiveLock;
 
 	public function __construct(array $options)
 	{
@@ -37,12 +35,12 @@ class RedisSessionHandler extends AbstractSessionHandler
 		]);
 	}
 
-	public function open($savePath, $sessionName)
+	public function open($savePath, $sessionName): bool
 	{
 		return $this->createConnection();
 	}
 
-	public function close()
+	public function close(): bool
 	{
 		parent::close();
 		$this->closeConnection();
@@ -79,7 +77,7 @@ class RedisSessionHandler extends AbstractSessionHandler
 			return false;
 		}
 
-		$this->connection->delete($this->getPrefix() . $sessionId);
+		$this->connection->del($this->getPrefix() . $sessionId);
 
 		if ($isConnectionRestored)
 		{
@@ -89,9 +87,9 @@ class RedisSessionHandler extends AbstractSessionHandler
 		return true;
 	}
 
-	public function gc($maxLifeTime)
+	public function gc($maxLifeTime): int
 	{
-		return true;
+		return 0;
 	}
 
 	protected function isConnected(): bool
@@ -111,7 +109,7 @@ class RedisSessionHandler extends AbstractSessionHandler
 		$redisConnection = $connectionPool->getConnection(self::SESSION_REDIS_CONNECTION);
 		$this->connection = $redisConnection->getResource();
 
-		return $this->connection->isConnected();
+		return $redisConnection->isConnected();
 	}
 
 	protected function closeConnection(): void
@@ -124,7 +122,7 @@ class RedisSessionHandler extends AbstractSessionHandler
 		$this->connection = null;
 	}
 
-	public function updateTimestamp($sessionId, $sessionData)
+	public function updateTimestamp($sessionId, $sessionData): bool
 	{
 		return $this->write($sessionId, $sessionData);
 	}
@@ -173,7 +171,7 @@ class RedisSessionHandler extends AbstractSessionHandler
 
 	protected function unlock($sessionId): bool
 	{
-		$this->connection->delete($this->getPrefix() . "{$sessionId}.lock");
+		$this->connection->del($this->getPrefix() . "{$sessionId}.lock");
 
 		return true;
 	}

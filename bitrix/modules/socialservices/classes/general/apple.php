@@ -71,18 +71,17 @@ class CSocServApple extends CSocServAuth
 	{
 		global $APPLICATION;
 
-		CSocServAuthManager::SetUniqueKey();
 		if (defined('BX24_HOST_NAME') && IsModuleInstalled('bitrix24'))
 		{
 			$redirect_uri = static::CONTROLLER_URL . '/redirect.php';
-			$state = $this->getEntityOAuth()->GetRedirectURI() . '?check_key=' . $_SESSION['UNIQUE_KEY'] . '&state=';
+			$state = $this->getEntityOAuth()->GetRedirectURI() . '?check_key=' . \CSocServAuthManager::getUniqueKey() . '&state=';
 			$backurl = $APPLICATION->GetCurPageParam('', ['logout', 'auth_service_error', 'auth_service_id', 'backurl']);
 			$state .= urlencode('state=' . urlencode('backurl=' . urlencode($backurl) . (isset($arParams['BACKURL']) ? '&redirect_url=' . urlencode($arParams['BACKURL']) : '')));
 		}
 		else
 		{
 			$state = 'site_id=' . SITE_ID . '&backurl=' .
-				urlencode($APPLICATION->GetCurPageParam('check_key=' . $_SESSION['UNIQUE_KEY'], ['logout', 'auth_service_error', 'auth_service_id', 'backurl'])) .
+				urlencode($APPLICATION->GetCurPageParam('check_key=' . \CSocServAuthManager::getUniqueKey(), ['logout', 'auth_service_error', 'auth_service_id', 'backurl'])) .
 				(isset($arParams['BACKURL']) ? '&redirect_url=' . urlencode($arParams['BACKURL']) : '');
 
 			$redirect_uri = $this->getEntityOAuth()->GetRedirectURI();
@@ -252,7 +251,6 @@ class CSocServApple extends CSocServAuth
 			$url .= ((strpos($url, "?") === false) ? '?' : '&') . "current_fieldset=SOCSERV";
 		}
 		LocalRedirect($url);
-		die();
 	}
 
 	public function setUser($userId)
@@ -350,8 +348,15 @@ class CAppleInterface extends CSocServOAuthTransport
 		}
 
 		//case for sign in from Bitrix24 application on iOS device
-		$request = \Bitrix\Main\Context::getCurrent()->getRequest()->toArray();
-		if ($request['service'] === self::SERVICE_ID && $request['platform'] === 'ios')
+		$request = \Bitrix\Main\Context::getCurrent()->getRequest();
+		$requestData = $request->toArray();
+		if (
+			$requestData['service'] === self::SERVICE_ID
+			&& (
+				$requestData['platform'] === 'ios'
+				|| (empty($requestData['platform']) && mb_strpos($request->getUserAgent(), 'Darwin') !== false)
+			)
+		)
 		{
 			$this->appID = self::BITRIX_APP_BUNDLE_ID;
 		}

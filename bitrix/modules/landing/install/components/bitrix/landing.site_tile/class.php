@@ -10,6 +10,7 @@ use Bitrix\Landing\Manager;
 use Bitrix\Landing\Restriction;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Type\Date;
+use \Bitrix\Landing\Rights;
 
 Loc::loadMessages(__FILE__);
 
@@ -157,14 +158,21 @@ class LandingSiteTileComponent extends LandingBaseComponent
 
 			$item['ACTIVE'] = $item['ACTIVE'] ?? null;
 			$item['PREVIEW'] = $item['PREVIEW'] ?? null;
+			$item['CLOUD_PREVIEW'] = $item['CLOUD_PREVIEW'] ?? null;
 			$item['DOMAIN_NAME'] = $item['DOMAIN_NAME'] ?? null;
 			$item['PUBLIC_URL'] = $item['PUBLIC_URL'] ?? null;
 
 			// can delete?
-			$item['ACCESS_DELETE'] = 'Y';
-			if (is_array($this->arParams['DELETE_LOCKED']) && in_array($item['ID'], $this->arParams['DELETE_LOCKED']))
+			if ($item['ACCESS_DELETE'] !== 'N')
 			{
-				$item['ACCESS_DELETE'] = 'N';
+				$item['ACCESS_DELETE'] = 'Y';
+				if (
+					is_array($this->arParams['DELETE_LOCKED'])
+					&& in_array($item['ID'], $this->arParams['DELETE_LOCKED'], true)
+				)
+				{
+					$item['ACCESS_DELETE'] = 'N';
+				}
 			}
 
 			$published = $item['ACTIVE'] === 'Y' && $item['DELETED'] === 'N';
@@ -255,6 +263,7 @@ class LandingSiteTileComponent extends LandingBaseComponent
 				'phone' => $this->getSitePhone($item['ID']),
 				'ordersCount' => $orderCounts[$item['ID']],
 				'preview' => $item['PREVIEW'] ?: '',
+				'cloudPreview' => $item['CLOUD_PREVIEW'] ?: '',
 				'published' => $published,
 				'deleted' => $deleted,
 				'domainStatus' => $domainStatus,
@@ -265,6 +274,7 @@ class LandingSiteTileComponent extends LandingBaseComponent
 				'contactsUrl' => $this->replaceLink($this->arParams['PAGE_URL_CONTACTS'], $item),
 				'pagesUrl' => $this->replaceLink($this->arParams['PAGE_URL_SITE'], $item),
 				'ordersUrl' => $this->replaceLink($this->arParams['PAGE_URL_CRM_ORDERS'], $item),
+				'indexEditUrl' => ($item['INDEX_EDIT_URI'] ?? '') ?: '',
 				'menuItems' => array_values($menuItems),
 				'menuBottomItems' => $menuBottomItems,
 				'access' => [
@@ -272,7 +282,8 @@ class LandingSiteTileComponent extends LandingBaseComponent
 					'settings' => $item['ACCESS_SETTINGS'] === 'Y',
 					'publication' => $item['ACCESS_PUBLICATION'] === 'Y',
 					'delete' => $item['ACCESS_DELETE'] === 'Y',
-					'site_new' => $item['ACCESS_SITE_NEW'] === 'Y'
+					'site_new' => $item['ACCESS_SITE_NEW'] === 'Y',
+					'export' => $item['ACCESS_EXPORT'] === 'Y',
 				]
 			];
 		}

@@ -1,0 +1,6 @@
+<?
+$sSectionName = "taxi";
+$arDirProperties = Array(
+
+);
+?>

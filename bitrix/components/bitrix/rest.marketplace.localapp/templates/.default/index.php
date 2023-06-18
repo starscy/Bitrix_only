@@ -16,6 +16,8 @@ use Bitrix\Main\Loader;
  * @global CUser $USER
  */
 
+\Bitrix\Main\UI\Extension::load('ui.fonts.opensans');
+
 $arCRMFormParams = array(
 	"ru" => array(
 		"js_params" => "b24form({\"id\":\"65\",\"lang\":\"ru\",\"sec\":\"joq1dv\",\"type\":\"link\",\"click\":\"\"});",
@@ -100,7 +102,7 @@ if (in_array(LANGUAGE_ID, array('ua', 'ru')))
 			if(w[b]['forms']) return;
 			s=d.createElement('script');r=1*new Date();s.async=1;s.src=u+'?'+r;
 			h=d.getElementsByTagName('script')[0];h.parentNode.insertBefore(s,h);
-		})(window,document,'https://cp.bitrix.ru/bitrix/js/crm/form_loader.js','b24form');
+		})(window,document,'https://bitrix24.team/bitrix/js/crm/form_loader.js','b24form');
 
 			<?=$arReplaceParams['js_params'];?>
 	});

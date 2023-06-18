@@ -23,7 +23,6 @@ if($arLocation = $dbLocation->Fetch())//if there are no data in module
 	}
 	while($arLocation = $dbLocation->Fetch());
 	
-	$DB->StartTransaction();
     include_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/csv_data.php");
 	$csvFile = new CCSVData();
 	$csvFile->LoadFile(dirname(__FILE__)."/data/".$lang."/zip.csv");
@@ -42,6 +41,4 @@ if($arLocation = $dbLocation->Fetch())//if there are no data in module
 		}
 	}
 
-	$DB->Commit();	
 }
-?>

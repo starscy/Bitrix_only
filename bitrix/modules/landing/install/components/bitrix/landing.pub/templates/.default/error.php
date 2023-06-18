@@ -73,7 +73,9 @@ if (
 					<div class="landing-error-kb-img-inner"></div>
 				</div>
 				<div class="landing-error-kb-desc"><?= Loc::getMessage('LANDING_TPL_ERROR_NOT_ALLOWED_NOTE_KNOWLEDGE');?></div>
+				<?if (!\Bitrix\Landing\Connector\Mobile::isMobileHit()):?>
 				<a href="#" id="landing-access-request" class="ui-btn ui-btn-primary"><?= Loc::getMessage('LANDING_TPL_ERROR_NOT_ALLOWED_ASK');?></a>
+				<?endif?>
 			</div>
 		</div>
 		<script>
@@ -108,7 +110,7 @@ if (
 				});
 			});
 		</script>
-	<?elseif ($errorCode == 'SITE_NOT_ALLOWED' && $arParams['TYPE'] == 'GROUP'):?>
+	<?elseif ($errorCode == 'SITE_NOT_ALLOWED' && $arParams['TYPE'] == Type::SCOPE_CODE_GROUP):?>
 		<div class="landing-error-kb landing-error-kb-group">
 			<div class="landing-error-kb-inner">
 				<div class="landing-error-kb-title"><?= $error;?></div>
@@ -116,7 +118,7 @@ if (
 					<div class="landing-error-kb-img-inner"></div>
 				</div>
 				<div class="landing-error-kb-desc">
-					<?= Loc::getMessage('LANDING_TPL_ERROR_NOT_ALLOWED_NOTE_GROUP', [
+					<?= Loc::getMessage('LANDING_TPL_ERROR_NOT_ALLOWED_NOTE_2_GROUP', [
 						'#LINK1#' => '<a href="' . $groupPath . '" target="_top">',
 						'#LINK2#' => '</a>',
 					]);?>
@@ -133,7 +135,12 @@ if (
 			<div class="landing-error-site-img-inner"></div>
 		</div>
 		<div class="landing-error-site-title"><?= $error;?></div>
-		<div class="landing-error-site-desc"><?= Loc::getMessage('LANDING_TPL_ERROR_NOT_FOUND_NOTE');?></div>
+		<div class="landing-error-site-desc">
+			<?= Loc::getMessage('LANDING_TPL_ERROR_NOT_FOUND_NOTE', [
+				'#LINK1#' => '<a href="' . ($arResult['SITE_URL'] ?? '/') . '">',
+				'#LINK2#' => '</a>',
+			]);?>
+		</div>
 	</div>
 
 <?endif;?>

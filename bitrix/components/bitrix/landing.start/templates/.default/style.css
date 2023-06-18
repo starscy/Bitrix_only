@@ -1,7 +1,7 @@
 .landing-slider-frame-popup {
 	background: #eef2f4 !important;
 	padding: 0 15px 21px 21px;
-	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-family: var(--ui-font-family-primary, var(--ui-font-family-helvetica));
 }
 
 .landing-agreement-popup-wrapper .popup-window-content {
@@ -12,7 +12,7 @@
 	width: 595px;
 	padding: 20px 27px;
 	border-radius: 2px;
-	background: #EEF2F4;
+	background: white;
 	max-height: 300px;
 	overflow-y: auto;
 }
@@ -88,17 +88,28 @@
 }
 
 .landing-slider-pagetitle {
-	font: 26px/26px "OpenSans-Light", Helvetica, Arial, sans-serif;
+	font: 26px/26px var(--ui-font-family-secondary, var(--ui-font-family-open-sans));
+	font-weight: var(--ui-font-weight-light, 300);
 	margin: 0;
 	padding: 21px 0 21px 5px;
 	display: flex;
+	flex-wrap: nowrap;
 	word-wrap: break-word;
 	justify-content: space-between;
 }
 
+.landing-slider-pagetitle-title
+{
+	flex-grow: 0;
+	padding-right: 20px;
+}
+
 .landing-slider-pagetitle-actions
 {
-	padding-right: 30px;
+	padding-right: 20px;
+	flex-grow: 1;
+	display: flex;
+	justify-content: flex-end;
 }
 
 .landing-slider-no-background .ui-side-panel-wrap-workarea {
@@ -107,4 +118,29 @@
 
 .landing-slider-no-background .landing-template-preview-body {
 	padding: 0;
+}
+
+.landing-agreement-popup-content p:last-child
+{
+	margin-bottom: 0;
+}
+
+.landing-agreement-popup-content .landing-agreement-popup-content-1
+{
+	background: #E1F3F9;
+	color: #333333;
+	border-radius: 10px;
+	padding: 10px;
+}
+.landing-agreement-popup-content .landing-agreement-popup-content-2
+{
+	padding: 10px;
+}
+.landing-agreement-popup-content .landing-agreement-popup-content-3
+{
+	background: #EEEFF0;
+	color: #525C69;
+	border-radius: 10px;
+	padding: 10px;
+	font-size: 12px;
 }

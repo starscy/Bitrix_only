@@ -1,4 +1,4 @@
-;(function ()
+;(function ($)
 {
 	"use strict";
 
@@ -105,18 +105,31 @@
 	{
 		if (BX.Landing.getMode() !== "edit")
 		{
-			var collapse = event.block.querySelector('.collapse');
+			const collapse = event.block.querySelector('.collapse');
+
 			if (collapse)
 			{
-				var links = [].slice.call(collapse.querySelectorAll('.nav-item'));
+				const links = [].slice.call(collapse.querySelectorAll('.nav-item'));
 				if (!!links && links.length)
 				{
 					links.forEach(function (link)
 					{
-						BX.bind(link, "click", function (event)
-						{
-							$(event.target).parents('.collapse').collapse('hide');
+						BX.bind(link, "click", event => {
+							$(collapse).collapse('hide');
 						});
+					});
+				}
+
+				const hamburger = event.block.querySelector('.hamburger');
+				if (hamburger)
+				{
+					$(collapse).on('hide.bs.collapse', () =>
+					{
+						hamburger.classList.remove('is-active');
+					});
+					$(collapse).on('show.bs.collapse', () =>
+					{
+						hamburger.classList.add('is-active');
 					});
 				}
 			}
@@ -279,6 +292,12 @@
 			}
 
 			BX.addClass(parentNavLink, 'g-menu-sublevel-toggler--parent');
+			const newParentNavLink = BX.create("div");
+			parentNavLink.childNodes.forEach(function(childNode) {
+				newParentNavLink.append(childNode.cloneNode(true))
+			})
+			parentNavLink.innerHTML = '';
+			parentNavLink.append(newParentNavLink);
 			BX.adjust(parentNavLink,
 				{
 					children: [
@@ -336,4 +355,4 @@
 			BX.removeClass(subMenu, 'g-menu-sublevel--hide');
 		}
 	}
-})();
+})(window.jQueryLanding || jQuery);

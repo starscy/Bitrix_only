@@ -103,9 +103,9 @@ abstract class Form extends BaseApiObject
 	/**
 	 * Register WebHook
 	 * @param $formId
-	 * @return bool
+	 * @return Retargeting\Response
 	 */
-	abstract public function register($formId): bool;
+	abstract public function register($formId): Retargeting\Response;
 
 	/**
 	 * Unlink.
@@ -245,6 +245,11 @@ abstract class Form extends BaseApiObject
 		return static::URL_FORM_LIST;
 	}
 
+	public function loadLeads($formId): \Bitrix\Main\Result
+	{
+		return new \Bitrix\Main\Result();
+	}
+
 	/**
 	 * Is account supported.
 	 *
@@ -283,6 +288,21 @@ abstract class Form extends BaseApiObject
 			Service::getEngineCode(static::TYPE_CODE),
 			$adsFormId
 		)->register($parameters);
+	}
+
+	protected function registerForm($adsFormId)
+	{
+		return WebHook\Service::registerForm($adsFormId);
+	}
+
+	public function unregisterForms()
+	{
+		
+	}
+
+	public function unregisterForm($adsFormId): bool
+	{
+		return WebHook\Service::unregisterForm($adsFormId);
 	}
 
 	protected function removeFormWebHook($adsFormId): bool

@@ -1,6 +1,7 @@
 import { Dom, Event, Tag } from 'main.core';
 import { Control } from './internal/control';
 import { BaseEvent, EventEmitter } from 'main.core.events';
+import 'ui.design-tokens';
 
 import './css/style.css';
 
@@ -38,15 +39,18 @@ export class DesignPreview extends EventEmitter
 
 	controls: Controls;
 
-	constructor(form: HTMLElement, options: Object = {}, phrase: Object = {})
+	constructor(form: HTMLElement, options: Object = {}, phrase: Object = {}, id = null)
 	{
 		super();
 		this.setEventNamespace('BX.Landing.SettingsForm.DesignPreview');
 
 		this.form = form;
 		this.phrase = phrase;
+		this.id = id;
+		this.options = options;
+		this.fontProxyUrl = window.fontsProxyUrl ?? 'fonts.googleapis.com';
 
-		this.initControls(options);
+		this.initControls();
 		this.initLayout();
 		this.applyStyles();
 		this.onApplyStyles = this.applyStyles.bind(this);
@@ -54,7 +58,7 @@ export class DesignPreview extends EventEmitter
 
 	initLayout()
 	{
-		this.layout = DesignPreview.createLayout(this.phrase);
+		this.createLayout();
 		this.styleNode = document.createElement("style");
 		Dom.append(this.styleNode, this.layout);
 		Dom.append(this.layout, this.form);
@@ -92,22 +96,21 @@ export class DesignPreview extends EventEmitter
 				}
 			})
 		}, paramsObserver)
-		let elementDesignPreview = document.querySelector('.landing-design-preview-wrap');
-		observer.observe(elementDesignPreview);
+		observer.observe(this.layoutContent.parentNode);
 	}
 
-	initControls(options: Object)
+	initControls()
 	{
 		this.controls = {};
-		for (let group in options)
+		for (const group in this.options)
 		{
-			if (!options.hasOwnProperty(group))
+			if (!this.options.hasOwnProperty(group))
 			{
 				continue;
 			}
-			for (let key in options[group])
+			for (const key in this.options[group])
 			{
-				if (!options[group].hasOwnProperty(key))
+				if (!this.options[group].hasOwnProperty(key))
 				{
 					continue;
 				}
@@ -116,7 +119,7 @@ export class DesignPreview extends EventEmitter
 					this.controls[group] = {};
 				}
 
-				const control = new Control(options[group][key]['control']);
+				const control = new Control(this.options[group][key]['control']);
 				control.setChangeHandler(this.applyStyles.bind(this));
 				if (group === 'theme' && key !== 'use')
 				{
@@ -126,19 +129,19 @@ export class DesignPreview extends EventEmitter
 				{
 					control.setClickHandler(this.applyStyles.bind(this));
 				}
-				
+
 				this.controls[group][key] = control;
 			}
 		}
 
 		// parents and default
-		for (let group in this.controls)
+		for (const group in this.controls)
 		{
 			if (!this.controls.hasOwnProperty(group))
 			{
 				continue;
 			}
-			for (let key in this.controls[group])
+			for (const key in this.controls[group])
 			{
 				if (!this.controls[group].hasOwnProperty(key))
 				{
@@ -147,17 +150,17 @@ export class DesignPreview extends EventEmitter
 				if (key !== 'use' && this.controls[group]['use'])
 				{
 					this.controls[group][key].setParent(this.controls[group]['use']);
-					if (options[group][key]['defaultValue'])
+					if (this.options[group][key]['defaultValue'])
 					{
-						this.controls[group][key].setDefaultValue(options[group][key]['defaultValue']);
+						this.controls[group][key].setDefaultValue(this.options[group][key]['defaultValue']);
 					}
 				}
 			}
 		}
-		
+
 		if (this.controls.theme.corporateColor.node)
 		{
-			this.controls.theme.corporateColor.node.subscribe('onSelectColor', this.onApplyStyles.bind(this));
+			this.controls.theme.corporateColor.node.subscribe('onSelectCustomColor', this.applyStyles.bind(this));
 		}
 		if (this.controls.background.image.node)
 		{
@@ -217,7 +220,7 @@ export class DesignPreview extends EventEmitter
 
 	generateSelectorStart(className)
 	{
-		return '.' + className + ' {';
+		return '#' + className + ' {';
 	}
 
 	generateSelectorEnd(selector)
@@ -228,7 +231,7 @@ export class DesignPreview extends EventEmitter
 	getCSSPart1(css)
 	{
 		let colorPrimary;
-		let setColors = this.controls.theme.baseColors.node;
+		const setColors = this.controls.theme.baseColors.node;
 		let colorPickerElement;
 		if (this.controls.theme.corporateColor.node)
 		{
@@ -243,7 +246,7 @@ export class DesignPreview extends EventEmitter
 		let isActiveColorPickerElement;
 		if (colorPickerElement)
 		{
-			isActiveColorPickerElement = colorPickerElement.classList.contains('active');
+			isActiveColorPickerElement = Dom.hasClass(colorPickerElement, 'active')
 		}
 
 		if (activeColorNode)
@@ -333,17 +336,13 @@ export class DesignPreview extends EventEmitter
 			}
 		}
 
-		let link;
-		let linkH;
 		if (textFont)
 		{
-			link = this.createLink(textFont);
-			Dom.append(link, this.form);
+			Dom.append(this.createFontLink(textFont), this.form);
 		}
 		if (hFont)
 		{
-			linkH = this.createLink(hFont);
-			Dom.append(linkH, this.form);
+			Dom.append(this.createFontLink(hFont), this.form);
 		}
 
 		css += `--design-preview-color: ${textColor};`;
@@ -379,21 +378,22 @@ export class DesignPreview extends EventEmitter
 		return css;
 	}
 
-	createLink(font)
+	createFontLink(font: string)
 	{
-		let link = document.createElement('link');
+		const link = document.createElement('link');
 		link.rel = 'stylesheet';
-		link.href = 'https://fonts.googleapis.com/css2?family=';
+		link.href = 'https://' + this.fontProxyUrl + '/css2?family=';
 		link.href += font.replace(' ', '+');
 		link.href += ':wght@100;200;300;400;500;600;700;800;900';
+
 		return link;
 	}
 
 	getCSSPart3(css)
 	{
 		let bgColor = this.controls.background.color.node.input.value;
-		let bgFieldNode = this.controls.background.field.node;
-		let bgPictureElement = bgFieldNode.getElementsByClassName('landing-ui-field-image-hidden');
+		const bgFieldNode = this.controls.background.field.node;
+		const bgPictureElement = bgFieldNode.getElementsByClassName('landing-ui-field-image-hidden');
 		let bgPicture = bgPictureElement[0].getAttribute('src');
 		let bgPosition = this.controls.background.position.node.value;
 
@@ -449,7 +449,7 @@ export class DesignPreview extends EventEmitter
 	generateCss()
 	{
 		let css;
-		css = this.generateSelectorStart('landing-design-preview');
+		css = this.generateSelectorStart(this.id);
 		css = this.getCSSPart1(css);
 		css = this.getCSSPart2(css);
 		css = this.getCSSPart3(css);
@@ -458,40 +458,25 @@ export class DesignPreview extends EventEmitter
 		return css;
 	}
 
-	static createLayout(phrase): HTMLDivElement
+	createLayout(): HTMLDivElement
 	{
-		return Tag.render`
-			<div class="landing-design-preview-wrap">
-				<div class="landing-design-preview">
-					<h2 class="landing-design-preview-title">${phrase.title}</h2>
-					<h4 class="landing-design-preview-subtitle">${phrase.subtitle}</h4>
-					<p class="landing-design-preview-text">
-						${phrase.text1}
-					</p>
-					<p class="landing-design-preview-text">
-						${phrase.text2}
-					</p>
-					<div class="">
-						<a href="#" class="landing-design-preview-button">${phrase.button}</a>
-					</div>
-				</div>
-			</div>
-		`;
+		this.layout = Tag.render`<div class="landing-design-preview-wrap"></div>`;
+		this.layoutContent = Tag.render`<div id="${this.id}" class="landing-design-preview"><h2 class="landing-design-preview-title">${this.phrase.title}</h2><h4 class="landing-design-preview-subtitle">${this.phrase.subtitle}</h4><p class="landing-design-preview-text">${this.phrase.text1}</p><p class="landing-design-preview-text">${this.phrase.text2}</p><div class=""><a class="landing-design-preview-button">${this.phrase.button}</a></div></div>`;
+		Dom.append(this.layoutContent, this.layout);
 	}
 
 	fixElement()
 	{
-		const paddingDesignForm = 20;
-		const designForm = document.querySelector('.landing-design-form');
-		const designFormPosition = designForm.getBoundingClientRect();
-		const designPreview = document.querySelector('.landing-design-preview');
-		const designPreviewPosition = designPreview.getBoundingClientRect();
-		const bodyWidth = document.body.clientWidth;
-		const positionFixedRight = bodyWidth - designFormPosition.right + paddingDesignForm;
-		const paddingDesignPreview = 25;
-		const designPreviewWrap = document.querySelector('.landing-design-preview-wrap');
+		const designPreviewWrap = this.layoutContent.parentNode;
 		const designPreviewWrapPosition = designPreviewWrap.getBoundingClientRect();
+		const paddingDesignPreview = 20;
 		const maxWidth = designPreviewWrapPosition.width - (paddingDesignPreview * 2);
+		const designForm = designPreviewWrap.parentNode;
+		const designFormPosition = designForm.getBoundingClientRect();
+		const designPreviewPosition = this.layoutContent.getBoundingClientRect();
+		const bodyWidth = document.body.clientWidth;
+		const paddingDesignForm = 20;
+		const positionFixedRight = bodyWidth - designFormPosition.right + paddingDesignForm;
 		if (designFormPosition.height > designPreviewPosition.height)
 		{
 			let fixedStyle;
@@ -500,14 +485,13 @@ export class DesignPreview extends EventEmitter
 			fixedStyle += 'margin-top: 0; ';
 			fixedStyle += 'right: '+ positionFixedRight + 'px;';
 			fixedStyle += 'max-width: '+ maxWidth + 'px;';
-			designPreview.setAttribute("style", fixedStyle);
+			this.layoutContent.setAttribute("style", fixedStyle);
 		}
 	}
 
 	unFixElement()
 	{
-		let designPreview = document.querySelector('.landing-design-preview');
-		designPreview.setAttribute("style", '');
+		this.layoutContent.setAttribute("style", '');
 	}
 
 	convertFont(font)

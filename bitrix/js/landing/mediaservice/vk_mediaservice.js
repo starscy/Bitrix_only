@@ -11,10 +11,15 @@
 		BX.Landing.MediaService.BaseMediaService.apply(this, arguments);
 		this.matcher = BX.Landing.Utils.Matchers.vk;
 		this.isDataLoaded = false;
-		this.loadEmbedInfo().then(res => {
-			this.isDataLoaded = true;
-			BX.onCustomEvent(this, 'onDataLoaded');
-		});
+		this.embedInfoLoader = this.loadEmbedInfo();
+		this.embedInfoLoader
+			.then(res => {
+				this.isDataLoaded = true;
+				BX.onCustomEvent(this, 'onDataLoaded');
+			})
+			.catch(error => {
+				BX.onCustomEvent(this, 'onDataLoadError', [{message: error}]);
+			});
 		this.embedInfo = null;
 		this.embedURL = () => {
 			if (this.embedInfo)
@@ -35,7 +40,7 @@
 		this.previewURL = () => {
 			return this.embedInfo ? this.embedInfo['preview'] : '';
 		};
-		this.idPlace = 2;
+		this.idPlace = 3;
 		this.params = {
 			autoplay: 0,
 		};
@@ -70,11 +75,12 @@
 						title: BX.Landing.Loc.getMessage("LANDING_CONTENT_URL_MEDIA_AUTOPLAY"),
 						description: BX.Landing.Loc.getMessage("LANDING_CONTENT_URL_MEDIA_AUTOPLAY_DESC_NEW"),
 						selector: "autoplay",
-						content: parseInt(settings.autoplay),
+						content: !this.isBgVideoMode ? parseInt(settings.autoplay) : 1,
 						items: [
 							{name: BX.Landing.Loc.getMessage("LANDING_CONTENT_URL_MEDIA_YES"), value: 1},
 							{name: BX.Landing.Loc.getMessage("LANDING_CONTENT_URL_MEDIA_NO"), value: 0},
 						],
+						disabled: this.isBgVideoMode,
 					})
 				);
 			}
@@ -128,6 +134,20 @@
 								}
 
 								return this.embedInfo;
+							})
+							.catch(error => {
+								if (
+									error.type === 'error'
+									&& BX.Type.isArray(error.result)
+								)
+								{
+									const errorMessages = [];
+									error.result.forEach(errItem => {
+										errorMessages.push(errItem.error_description);
+									});
+
+									return Promise.reject(errorMessages.join('. '));
+								}
 							});
 					}
 
@@ -148,6 +168,23 @@
 				const videoId = embedUrl.match(BX.Landing.Utils.Matchers.youtube)[4];
 				this.url = 'https://www.youtube.com/watch?v=' + videoId;
 			}
+		},
+
+		/**
+		 * Vk links has no preview image - add from embed info
+		 * @return {Promise<Object, Object>}
+		 */
+		getURLPreview: function()
+		{
+			return this.embedInfoLoader
+				.then(() =>
+				{
+					return BX.Landing.Utils.getURLPreview(this.url);
+				})
+				.then(res => {
+					res.IMAGE = this.embedInfo.preview;
+					return res;
+				});
 		},
 	};
 })();

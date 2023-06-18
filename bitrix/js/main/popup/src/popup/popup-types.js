@@ -1,5 +1,6 @@
 import { type BaseEvent } from 'main.core.events';
 import { ZIndexComponentOptions } from 'main.core.z-index-manager';
+import type CloseIconSize from './popup-close-icon-size';
 
 export type PopupOptions = {
 	id?: string,
@@ -18,11 +19,14 @@ export type PopupOptions = {
 	resizable?: boolean,
 	padding?: number,
 	contentPadding?: number,
+	borderRadius?: string,
+	contentBorderRadius?: string,
 	background?: string,
 	cacheable?: boolean,
 	contentBackground?: string,
 	animation?: PopupAnimationOptions,
 	closeIcon?: boolean,
+	closeIconSize?: $Values<CloseIconSize>,
 	autoHide?: boolean,
 	autoHideHandler?: (event: MouseEvent) => boolean,
 	zIndexOptions?: ZIndexComponentOptions,
@@ -34,9 +38,11 @@ export type PopupOptions = {
 	contentColor?: 'white' | 'gray',
 	draggable?: boolean | { restrict: boolean },
 	darkMode?: boolean,
+	fixed?: boolean,
 	compatibleMode?: boolean,
 	bindOnResize?: boolean,
 	targetContainer?: HTMLElement,
+	disableScroll?: boolean,
 
 	//Compatibility
 	noAllPaddings?: boolean,

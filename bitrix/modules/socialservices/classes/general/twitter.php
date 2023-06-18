@@ -38,7 +38,7 @@ class CSocServTwitter extends CSocServAuth
 	public function getUrl($arParams)
 	{
 		// due to something strange reason Twitter does incorrect encoding of oauth_redirect parameters
-		return '/bitrix/tools/oauth/twitter.php?check_key='.$_SESSION["UNIQUE_KEY"].(isset($arParams['BACKURL']) ? "&backurl=".urlencode(urlencode($arParams['BACKURL'])) : '');
+		return '/bitrix/tools/oauth/twitter.php?check_key='.\CSocServAuthManager::getUniqueKey().(isset($arParams['BACKURL']) ? "&backurl=".urlencode(urlencode($arParams['BACKURL'])) : '');
 	}
 
 	public function Authorize()
@@ -120,7 +120,7 @@ if(window.opener)
 window.close();
 </script>
 ';
-			die();
+			CMain::FinalActions();
 		}
 		else
 		{
@@ -323,7 +323,7 @@ class CTwitterInterface
 		if(!$this->token)
 			return false;
 
-		LocalRedirect(self::AUTH_URL."?oauth_token=".urlencode($this->token).'&check_key='.$_SESSION["UNIQUE_KEY"]/*."&state=".urlencode($state)*/, true);
+		LocalRedirect(self::AUTH_URL."?oauth_token=".urlencode($this->token).'&check_key='.\CSocServAuthManager::getUniqueKey()/*."&state=".urlencode($state)*/, true);
 	}
 
 	public function GetAccessToken()
@@ -606,7 +606,7 @@ class CTwitterInterface
 		]);
 		while($arSocUser = $dbSocUser->fetch())
 		{
-			$arUserPermis = unserialize($arSocUser["PERMISSIONS"]);
+			$arUserPermis = unserialize($arSocUser["PERMISSIONS"], ['allowed_classes' => false]);
 			if(is_array($arUserPermis))
 				foreach($arUserPermis as $key=>$value)
 					if($value == "UA")

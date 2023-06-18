@@ -38,7 +38,7 @@ this.BX.Landing = this.BX.Landing || {};
 	    this.onMapClickHandler = main_core.Type.isFunction(options.onMapClick) ? options.onMapClick : () => {};
 	    this.onAddMarkerHandler = main_core.Type.isFunction(options.onAddMarker) ? options.onAddMarker : () => {};
 	    this.onApiLoadedHandler = main_core.Type.isFunction(options.onApiLoaded) ? options.onApiLoaded : () => {};
-	    this.onInitHandler = main_core.Type.isFunction(options.onProviderInit) ? options.onProviderInit : this.init;
+	    this.onInitHandler = main_core.Type.isFunction(options.onProviderInit) ? options.onProviderInit : () => {};
 	    this.options = options;
 	    this.mapOptions = this.prepareMapOptions(options.mapOptions);
 	    this.mapContainer = options.mapContainer;
@@ -46,6 +46,7 @@ this.BX.Landing = this.BX.Landing || {};
 	    this.mapInstance = null;
 	    this.cache = new main_core.Cache.MemoryCache();
 	    this.handleApiLoad();
+	    this.onChange = main_core.Runtime.debounce(this.onChange.bind(this), 666);
 	  }
 	  /**
 	   * Default options for map
@@ -168,6 +169,18 @@ this.BX.Landing = this.BX.Landing || {};
 
 
 	  init() {
+	    this.onInitHandler();
+	    this.emit('onInit');
+	  }
+	  /**
+	   * Pass new options and reinit map
+	   * @param options
+	   */
+
+
+	  reinit(options) {
+	    // todo: add options type and validation
+	    this.options = options;
 	    this.emit('onInit');
 	  }
 	  /**
@@ -186,6 +199,7 @@ this.BX.Landing = this.BX.Landing || {};
 
 	  onChange() {
 	    this.onChangeHandler(this.preventChangeEvent);
+	    this.preventChangeEvent = false;
 	  }
 	  /**
 	   * Adds marker on map
@@ -227,6 +241,16 @@ this.BX.Landing = this.BX.Landing || {};
 	    throw new Error("Must be implemented by subclass");
 	  }
 	  /**
+	   * Removes all markers from map
+	   * @abstract
+	   * @param options
+	   */
+
+
+	  clearMarkers() {
+	    throw new Error("Must be implemented by subclass");
+	  }
+	  /**
 	   * Gets map value
 	   * @abstract
 	   */
@@ -244,7 +268,7 @@ this.BX.Landing = this.BX.Landing || {};
 
 	  setValue(value, preventChangeEvent) {
 	    this.preventChangeEvent = preventChangeEvent;
-	    this.markers.forEach(this.removeMarker, this);
+	    this.clearMarkers();
 
 	    if (main_core.Type.isPlainObject(value)) {
 	      if (main_core.Type.isArray(value.markers)) {
@@ -255,12 +279,10 @@ this.BX.Landing = this.BX.Landing || {};
 	        this.setCenter(value.center);
 	      }
 
-	      if (!BX.Landing.Utils.isEmpty(value.zoom)) {
+	      if (value.zoom && main_core.Type.isNumber(value.zoom)) {
 	        this.setZoom(value.zoom);
 	      }
 	    }
-
-	    this.preventChangeEvent = false;
 	  }
 	  /**
 	   * @abstract
@@ -1049,6 +1071,7 @@ this.BX.Landing = this.BX.Landing || {};
 	class GoogleMap extends BaseProvider {
 	  constructor(options) {
 	    super(options);
+	    this.setEventNamespace('BX.Landing.Provider.Map.GoogleMap');
 	    this.code = 'google';
 	    this.themes = themes;
 	  }
@@ -1068,6 +1091,7 @@ this.BX.Landing = this.BX.Landing || {};
 
 
 	  init() {
+	    this.preventChangeEvent = true;
 	    let opts = this.options;
 	    this.mapInstance = new google.maps.Map(this.mapContainer, {
 	      zoom: this.mapOptions.zoom,
@@ -1079,7 +1103,7 @@ this.BX.Landing = this.BX.Landing || {};
 	      streetViewControl: main_core.Type.isBoolean(opts.streetViewControl) ? opts.streetViewControl : true,
 	      rotateControl: main_core.Type.isBoolean(opts.rotateControl) ? opts.rotateControl : true,
 	      fullscreenControl: main_core.Type.isBoolean(opts.fullscreenControl) ? opts.fullscreenControl : true,
-	      styles: (opts.theme && opts.theme in this.themes ? this.themes[opts.theme] : []).concat(roads[opts.roads] || [], landmarks[opts.landmarks] || [], labels[opts.labels] || [])
+	      styles: this.getStylesFromOptions(opts)
 	    });
 
 	    if (this.mapOptions.markers) {
@@ -1090,12 +1114,23 @@ this.BX.Landing = this.BX.Landing || {};
 	      }, this);
 	    }
 
-	    this.onChange = this.onChange.bind(this);
 	    this.mapInstance.addListener("bounds_changed", this.onChange);
 	    this.mapInstance.addListener("center_changed", this.onChange);
 	    this.mapInstance.addListener("zoom_changed", this.onChange);
 	    this.mapInstance.addListener("click", this.onMapClickHandler);
 	    super.init();
+	  }
+
+	  reinit(options) {
+	    this.preventChangeEvent = true;
+	    this.mapInstance.setOptions({
+	      styles: this.getStylesFromOptions(options)
+	    });
+	    super.reinit();
+	  }
+
+	  getStylesFromOptions(options) {
+	    return (options.theme && options.theme in this.themes ? this.themes[options.theme] : []).concat(roads[options.roads] || [], landmarks[options.landmarks] || [], labels[options.labels] || []);
 	  }
 	  /**
 	   * Check is provider API was loaded
@@ -1176,11 +1211,20 @@ this.BX.Landing = this.BX.Landing || {};
 	    this.markers.remove(event);
 	  }
 
+	  clearMarkers() {
+	    this.markers.forEach(marker => {
+	      marker.marker.setMap(null);
+	    });
+	    this.markers.clear();
+	  }
+
 	  setZoom(zoom) {
+	    this.preventChangeEvent = true;
 	    this.mapInstance.setZoom(zoom);
 	  }
 
 	  setCenter(center) {
+	    this.preventChangeEvent = true;
 	    this.mapInstance.setCenter(center);
 	  }
 
@@ -1208,6 +1252,7 @@ this.BX.Landing = this.BX.Landing || {};
 	class YandexMap extends BaseProvider {
 	  constructor(options) {
 	    super(options);
+	    this.setEventNamespace('BX.Landing.Provider.Map.YandexMap');
 	    this.code = 'yandex';
 	  }
 	  /**
@@ -1216,14 +1261,14 @@ this.BX.Landing = this.BX.Landing || {};
 
 
 	  init() {
-	    const opts = this.options;
+	    this.preventChangeEvent = true;
 	    const controls = ['zoomControl', 'fullscreenControl', 'typeSelector', 'routeButtonControl'];
 
-	    if (opts.fullscreenControl === false) {
+	    if (this.options.fullscreenControl === false) {
 	      controls.splice(controls.indexOf('fullscreenControl'), 1);
 	    }
 
-	    if (opts.mapTypeControl === false) {
+	    if (this.options.mapTypeControl === false) {
 	      controls.splice(controls.indexOf('typeSelector'), 1);
 	      controls.splice(controls.indexOf('routeButtonControl'), 1);
 	    }
@@ -1231,9 +1276,10 @@ this.BX.Landing = this.BX.Landing || {};
 	    this.mapInstance = new ymaps.Map(this.mapContainer, {
 	      center: this.convertPointIn(this.mapOptions.center),
 	      zoom: this.mapOptions.zoom,
-	      behaviors: opts.zoomControl === false ? ['drag'] : ['default'],
+	      behaviors: this.options.zoomControl === false ? ['drag'] : ['default'],
 	      controls: controls
 	    });
+	    this.mapInstance.events.add('actionend', this.onChange);
 	    this.mapInstance.events.add('click', event => {
 	      this.cache.delete('value');
 	      this.onMapClickHandler(event);
@@ -1242,17 +1288,22 @@ this.BX.Landing = this.BX.Landing || {};
 	        this.markers[this.markers.length - 1].marker.balloon.open();
 	      }
 	    });
-	    this.mapInstance.events.add('actionend', this.onChange.bind(this));
 
 	    if (this.mapOptions.markers) {
-	      this.mapOptions.markers.forEach(function (markerItem) {
+	      this.mapOptions.markers.forEach(markerItem => {
 	        markerItem.editable = BX.Landing.getMode() === "edit";
 	        markerItem.draggable = BX.Landing.getMode() === "edit";
 	        this.addMarker(markerItem);
-	      }, this);
+	      });
 	    }
 
 	    super.init();
+	  }
+
+	  reinit(options) {
+	    // Yandex has't changes yet. If some settings will be added later - need implement reinit
+	    this.preventChangeEvent = true;
+	    super.reinit();
 	  }
 	  /**
 	   * Check is provider API was loaded
@@ -1338,6 +1389,7 @@ this.BX.Landing = this.BX.Landing || {};
 	    }
 
 	    this.markers.add(item);
+	    this.onChange();
 	  }
 
 	  onMarkerClick(item) {// Yandex will do everything himself
@@ -1360,7 +1412,13 @@ this.BX.Landing = this.BX.Landing || {};
 
 	  removeMarker(event) {
 	    this.mapInstance.geoObjects.remove(event.marker);
-	    this.markers.remove(event);
+	  }
+
+	  clearMarkers() {
+	    this.markers.forEach(marker => {
+	      this.mapInstance.geoObjects.remove(marker.marker);
+	    });
+	    this.markers.clear();
 	  }
 
 	  setZoom(zoom) {
@@ -1427,7 +1485,7 @@ this.BX.Landing = this.BX.Landing || {};
 	    const provider = new Map.PROVIDERS[providerCode](options);
 
 	    if (provider.isApiLoaded()) {
-	      provider.onInitHandler();
+	      provider.init();
 	    } else {
 	      if (!main_core.Type.isArray(Map.scheduled[provider.getCode()])) {
 	        Map.scheduled[provider.getCode()] = [];
@@ -1442,7 +1500,7 @@ this.BX.Landing = this.BX.Landing || {};
 	  static onApiLoaded(providerCode) {
 	    if (main_core.Type.isArray(Map.scheduled[providerCode])) {
 	      Map.scheduled[providerCode].forEach(provider => {
-	        provider.onInitHandler();
+	        provider.init();
 	      });
 	    }
 	  }

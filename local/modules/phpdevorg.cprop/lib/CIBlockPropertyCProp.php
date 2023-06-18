@@ -1,5 +1,6 @@
 <?php
 
+use Bitrix\Main\Loader;
 use \Bitrix\Main\Localization\Loc;
 
 
@@ -66,24 +67,8 @@ class CIBlockPropertyCProp
                 $result .= self::showBindElement($code, $arItem['TITLE'], $value, $strHTMLControlName);
             }
             else if($arItem['TYPE'] === 'html'){
-                ob_start();
-                ?><input type="hidden" name="<?=$strHTMLControlName["VALUE"]?>" value=""><?php
+                $result .= self::showHTML($arProperty, $value, $strHTMLControlName);
 
-				$text_name = preg_replace("/([^a-z0-9])/is", "_", $strHTMLControlName["VALUE"]."[TEXT]");
-				$text_type = preg_replace("/([^a-z0-9])/is", "_", $strHTMLControlName["VALUE"]."[TYPE]");
-				CFileMan::AddHTMLEditorFrame(
-                    $text_name,
-                    htmlspecialcharsBx($value['VALUE']['TEXT']),
-                    'html',
-                    'html',
-                   400,
-                    "N",
-                    0,
-                    "",
-                    ""
-                );
-                $result .= ob_get_contents();
-                ob_end_clean();
             }
         }
 
@@ -245,6 +230,75 @@ class CIBlockPropertyCProp
     }
 
     //Internals
+
+    private static function showHTML($arProperty, $value, $strHTMLControlName)
+{
+    if (!Loader::includeModule("fileman"))
+        return Loc::getMessage("IBLOCK_PROP_HTML_NOFILEMAN_ERROR");
+
+    if (!is_array($value["VALUE"]))
+        $value = static::ConvertFromDB($arProperty, $value);
+
+    if (isset($strHTMLControlName["MODE"]) && $strHTMLControlName["MODE"]=="SIMPLE")
+    {
+        return '<input type="hidden" name="'.$strHTMLControlName["VALUE"].'[TYPE]" value="html">'
+            .'<textarea cols="60" rows="10" name="'.$strHTMLControlName["VALUE"].'[TEXT]" style="width:100%">'.htmlspecialcharsEx($value["VALUE"]["TEXT"]).'</textarea>';
+    }
+
+    $id = preg_replace("/[^a-z0-9]/i", '', $strHTMLControlName['VALUE']);
+
+    ob_start();
+    echo '<input type="hidden" name="'.$strHTMLControlName["VALUE"].'[TYPE]" value="html">';
+    $LHE = new CHTMLEditor;
+    $LHE->Show(array(
+        'name' => $strHTMLControlName["VALUE"].'[TEXT]',
+        'id' => $id,
+        'inputName' => $strHTMLControlName["VALUE"].'[TEXT]',
+        'content' => $value["VALUE"]['TEXT'],
+        'width' => '100%',
+        'minBodyWidth' => 350,
+        'normalBodyWidth' => 555,
+        'height' => '200',
+        'bAllowPhp' => false,
+        'limitPhpAccess' => false,
+        'autoResize' => true,
+        'autoResizeOffset' => 40,
+        'useFileDialogs' => false,
+        'saveOnBlur' => true,
+        'showTaskbars' => false,
+        'showNodeNavi' => false,
+        'askBeforeUnloadPage' => true,
+        'bbCode' => false,
+        'actionUrl' => '/bitrix/tools/html_editor_action.php',
+        'siteId' => SITE_ID,
+        'setFocusAfterShow' => false,
+        'controlsMap' => array(
+            array('id' => 'Bold', 'compact' => true, 'sort' => 80),
+            array('id' => 'Italic', 'compact' => true, 'sort' => 90),
+            array('id' => 'Underline', 'compact' => true, 'sort' => 100),
+            array('id' => 'Strikeout', 'compact' => true, 'sort' => 110),
+            array('id' => 'RemoveFormat', 'compact' => true, 'sort' => 120),
+            array('id' => 'Color', 'compact' => true, 'sort' => 130),
+            array('id' => 'FontSelector', 'compact' => false, 'sort' => 135),
+            array('id' => 'FontSize', 'compact' => false, 'sort' => 140),
+            array('separator' => true, 'compact' => false, 'sort' => 145),
+            array('id' => 'OrderedList', 'compact' => true, 'sort' => 150),
+            array('id' => 'UnorderedList', 'compact' => true, 'sort' => 160),
+            array('id' => 'AlignList', 'compact' => false, 'sort' => 190),
+            array('separator' => true, 'compact' => false, 'sort' => 200),
+            array('id' => 'InsertLink', 'compact' => true, 'sort' => 210),
+            array('id' => 'InsertImage', 'compact' => false, 'sort' => 220),
+            array('id' => 'InsertVideo', 'compact' => true, 'sort' => 230),
+            array('id' => 'InsertTable', 'compact' => false, 'sort' => 250),
+            array('separator' => true, 'compact' => false, 'sort' => 290),
+            array('id' => 'Fullscreen', 'compact' => false, 'sort' => 310),
+            array('id' => 'More', 'compact' => true, 'sort' => 400)
+        ),
+    ));
+    $s = ob_get_contents();
+    ob_end_clean();
+    return  $s;
+}
 
     private static function showString($code, $title, $arValue, $strHTMLControlName)
     {

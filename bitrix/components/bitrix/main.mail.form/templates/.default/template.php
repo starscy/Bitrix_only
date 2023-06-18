@@ -1,4 +1,15 @@
-<? if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED !== true) die();
+<?
+if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED !== true)
+{
+	die();
+}
+
+\Bitrix\Main\UI\Extension::load([
+	'ui.design-tokens',
+	'ui.alerts',
+	'ui.buttons',
+	'ui.entity-selector',
+]);
 
 $htmlFormId = htmlspecialcharsbx('main_mail_form_'.$arParams['FORM_ID']);
 
@@ -74,9 +85,8 @@ $renderField = function($htmlFormId, $field, $isExt = false, $version)
 						<label class="main-mail-form-field-from-copy">
 							<span class="main-mail-form-field-spacer-25"></span>
 							<input class="main-mail-form-field-from-copy-checkbox" type="checkbox"
-								name="<?=htmlspecialcharsbx($field['copy']) ?>" value="Y" id="<?=$htmlFieldId ?>_copy"
-								<? if (\CUserOptions::getOption('main.mail.form', 'copy_to_sender', true)): ?> checked<? endif ?>><!--
-							--><span class="main-mail-form-field-title main-mail-form-field-from-copy-text"><?=getMessage('MAIN_MAIL_FORM_FROM_FIELD_COPY') ?></span>
+								name="<?=htmlspecialcharsbx($field['copy']) ?>" value="Y" id="<?=$htmlFieldId ?>_copy">
+							<span class="main-mail-form-field-title main-mail-form-field-from-copy-text"><?=getMessage('MAIN_MAIL_FORM_FROM_FIELD_COPY') ?></span>
 						</label>
 					<? endif ?>
 				</td>
@@ -312,13 +322,26 @@ $renderField = function($htmlFormId, $field, $isExt = false, $version)
 
 	?></tr><?
 };
-
-\Bitrix\Main\UI\Extension::load('ui.buttons');
-
 ?>
 <div class="main-mail-form-wrapper" id="<?=$htmlFormId ?>">
 	<div class="main-mail-form-fields-wrapper">
 		<table class="main-mail-form-fields-table">
+			<?
+			/**
+			 * Fix erroneous autocomplete (it won't work without an id)
+			 *
+			 * Some browsers define the form of sending messages as an authorization
+			 * form and give appropriate hints on autofill, modern browsers
+			 * do not take into account the "autocomplete=off" when prompted for autofill
+			 * and can also ignore the name of the field if they "think" that the form is similar
+			 * to the authorization form.
+			 */
+			?>
+			<tr>
+				<td>
+					<input style="display:none" id="mail-form-pseudo-field">
+				</td>
+			</tr>
 			<?
 			foreach ($arParams['FIELDS'] as $field)
 				$renderField($htmlFormId, $field, false, $arParams['VERSION']);
@@ -404,7 +427,6 @@ $renderField = function($htmlFormId, $field, $isExt = false, $version)
 				'LHE' => array(
 					'id' => sprintf('%s_editor', $htmlFormId),
 					'documentCSS' => 'body { color:#434343; }',
-					'fontFamily' => "'Helvetica Neue', Helvetica, Arial, sans-serif",
 					'fontSize' => '15px',
 					'height' => $editorHeight,
 					'lazyLoad' => true,
@@ -414,7 +436,7 @@ $renderField = function($htmlFormId, $field, $isExt = false, $version)
 					'useFileDialogs' => false,
 					'useLinkStat' => false,
 					'uploadImagesFromClipboard' => false,
-					'autoLink' => false,
+					'autoLink' => true,
 					'controlsMap' => array(
 						array('id' => 'Bold', 'compact' => true, 'sort' => 10),
 						array('id' => 'Italic', 'compact' => true, 'sort' => 20),
@@ -474,7 +496,7 @@ $renderField = function($htmlFormId, $field, $isExt = false, $version)
 		<div class="main-mail-form-border-bottom"></div>
 	<? endif ?>
 
-	<div class="main-mail-form-error" style="display: none; "></div>
+	<div class="main-mail-form-error"></div>
 	<div class="main-mail-form-footer-wrapper">
 		<div class="main-mail-form-footer">
 			<div class="main-mail-form-footer-buttons-wrapper">

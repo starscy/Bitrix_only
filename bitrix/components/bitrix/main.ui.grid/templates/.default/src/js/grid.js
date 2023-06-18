@@ -28,7 +28,6 @@
 	 * @param {boolean} arParams.ALLOW_PIN_HEADER
 	 * @param {boolean} arParams.SHOW_ACTION_PANEL
 	 * @param {boolean} arParams.PRESERVE_HISTORY
-	 * @param {boolean} arParams.BACKEND_URL
 	 * @param {boolean} arParams.ALLOW_CONTEXT_MENU
 	 * @param {object} arParams.DEFAULT_COLUMNS
 	 * @param {boolean} arParams.ENABLE_COLLAPSIBLE_ROWS
@@ -102,11 +101,6 @@
 			editorTypes,
 			messageTypes
 		);
-	};
-
-	BX.Main.grid.isNeedResourcesReady = function(container)
-	{
-		return BX.hasClass(container, 'main-grid-load-animation');
 	};
 
 	BX.Main.grid.prototype = {
@@ -547,6 +541,8 @@
 
 						self.getRows().reset();
 						var bodyRows = this.getBodyRows();
+
+						self.getUpdater().updateContainer(this.getContainer());
 						self.getUpdater().updateHeadRows(this.getHeadRows());
 						self.getUpdater().updateBodyRows(bodyRows);
 						self.getUpdater().updateFootRows(this.getFootRows());
@@ -808,9 +804,11 @@
 					BX.style(this.getTable(), 'min-height', (gridRect.height + Math.abs(diff) - panelsHeight - paddingOffset) + 'px');
 				}
 
+				BX.Dom.addClass(this.getContainer(), 'main-grid-empty-stub');
+
 				if (this.getCurrentPage() <= 1)
 				{
-					BX.Dom.hide(this.getPanels());
+					this.hidePanels();
 				}
 			}
 			else
@@ -823,7 +821,8 @@
 					BX.style(this.getTable(), 'height', '1px');
 				}.bind(this));
 
-				BX.Dom.show(this.getPanels());
+				this.showPanels();
+				BX.Dom.removeClass(this.getContainer(), 'main-grid-empty-stub');
 			}
 		},
 
@@ -853,6 +852,8 @@
 				BX.onCustomEvent(window, 'BX.Main.Grid:onBeforeReload', [self]);
 				self.getRows().reset();
 				bodyRows = this.getBodyRows();
+
+				self.getUpdater().updateContainer(this.getContainer());
 				self.getUpdater().updateHeadRows(this.getHeadRows());
 				self.getUpdater().updateBodyRows(bodyRows);
 				self.getUpdater().updateFootRows(this.getFootRows());
@@ -2262,9 +2263,10 @@
 			if (stub)
 			{
 				BX.Dom.attr(stub, 'hidden', null);
+				BX.Dom.addClass(this.getContainer(), 'main-grid-empty-stub');
 				if (this.getCurrentPage() <= 1)
 				{
-					BX.Dom.hide(this.getPanels());
+					this.hidePanels();
 				}
 			}
 		},
@@ -2278,9 +2280,31 @@
 			if (stub)
 			{
 				BX.Dom.attr(stub, 'hidden', true);
+				BX.Dom.removeClass(this.getContainer(), 'main-grid-empty-stub');
 				BX.Dom.style(this.getTable(), 'min-height', null);
-				BX.Dom.show(this.getPanels());
+				this.showPanels();
 			}
+		},
+
+		/**
+		 * @private
+		 */
+		showPanels: function()
+		{
+			BX.Dom.show(this.getPanels());
+			if (this.getPanels().offsetHeight > 0)
+			{
+				BX.Dom.removeClass(this.getContainer(), 'main-grid-empty-footer');
+			}
+		},
+
+		/**
+		 * @private
+		 */
+		hidePanels: function()
+		{
+			BX.Dom.hide(this.getPanels());
+			BX.Dom.addClass(this.getContainer(), 'main-grid-empty-footer');
 		},
 
 		/**

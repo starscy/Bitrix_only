@@ -103,5 +103,3 @@ $arLocationMap = Array();
 		}
 	}
 	$_SESSION["LOC_POST"] = $csvFile->GetPos();
-	$DB->Commit();
-?>

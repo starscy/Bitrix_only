@@ -1,4 +1,4 @@
-import {Type, Tag, Loc, Cache} from 'main.core';
+import {Type, Tag, Loc, Cache, Runtime} from 'main.core';
 import {EventEmitter} from 'main.core.events';
 import {BaseCollection} from 'landing.collection.basecollection';
 
@@ -36,7 +36,7 @@ export class BaseProvider extends EventEmitter
 		this.onMapClickHandler = Type.isFunction(options.onMapClick) ? options.onMapClick : (() => {});
 		this.onAddMarkerHandler = Type.isFunction(options.onAddMarker) ? options.onAddMarker : (() => {});
 		this.onApiLoadedHandler = Type.isFunction(options.onApiLoaded) ? options.onApiLoaded : (() => {});
-		this.onInitHandler = Type.isFunction(options.onProviderInit) ? options.onProviderInit : this.init;
+		this.onInitHandler = Type.isFunction(options.onProviderInit) ? options.onProviderInit : (() => {});
 		this.options = options;
 		this.mapOptions = this.prepareMapOptions(options.mapOptions);
 		this.mapContainer = options.mapContainer;
@@ -46,6 +46,8 @@ export class BaseProvider extends EventEmitter
 		this.cache = new Cache.MemoryCache();
 
 		this.handleApiLoad();
+
+		this.onChange = Runtime.debounce(this.onChange.bind(this), 666);
 	}
 
 
@@ -180,6 +182,18 @@ export class BaseProvider extends EventEmitter
 	 */
 	init()
 	{
+		this.onInitHandler();
+		this.emit('onInit');
+	}
+
+	/**
+	 * Pass new options and reinit map
+	 * @param options
+	 */
+	reinit(options: {})
+	{
+		// todo: add options type and validation
+		this.options = options;
 		this.emit('onInit');
 	}
 
@@ -198,6 +212,7 @@ export class BaseProvider extends EventEmitter
 	onChange()
 	{
 		this.onChangeHandler(this.preventChangeEvent);
+		this.preventChangeEvent = false;
 	}
 
 	/**
@@ -240,6 +255,16 @@ export class BaseProvider extends EventEmitter
 	}
 
 	/**
+	 * Removes all markers from map
+	 * @abstract
+	 * @param options
+	 */
+	clearMarkers(): void
+	{
+		throw new Error("Must be implemented by subclass");
+	}
+
+	/**
 	 * Gets map value
 	 * @abstract
 	 */
@@ -257,7 +282,7 @@ export class BaseProvider extends EventEmitter
 	{
 		this.preventChangeEvent = preventChangeEvent;
 
-		this.markers.forEach(this.removeMarker, this);
+		this.clearMarkers();
 
 		if (Type.isPlainObject(value))
 		{
@@ -271,13 +296,11 @@ export class BaseProvider extends EventEmitter
 				this.setCenter(value.center);
 			}
 
-			if (!BX.Landing.Utils.isEmpty(value.zoom))
+			if (value.zoom && Type.isNumber(value.zoom))
 			{
 				this.setZoom(value.zoom);
 			}
 		}
-
-		this.preventChangeEvent = false;
 	}
 
 	/**

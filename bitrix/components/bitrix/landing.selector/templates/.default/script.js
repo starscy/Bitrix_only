@@ -3,176 +3,131 @@ this.BX.Landing = this.BX.Landing || {};
 (function (exports,ui_entitySelector,main_core) {
 	'use strict';
 
-	function _templateObject6() {
-	  var data = babelHelpers.taggedTemplateLiteral([""]);
+	var _templateObject, _templateObject2, _templateObject3, _templateObject4, _templateObject5, _templateObject6, _templateObject7, _templateObject8;
 
-	  _templateObject6 = function _templateObject6() {
-	    return data;
-	  };
+	function _classPrivateMethodInitSpec(obj, privateSet) { _checkPrivateRedeclaration(obj, privateSet); privateSet.add(obj); }
 
-	  return data;
-	}
+	function _classPrivateFieldInitSpec(obj, privateMap, value) { _checkPrivateRedeclaration(obj, privateMap); privateMap.set(obj, value); }
 
-	function _templateObject5() {
-	  var data = babelHelpers.taggedTemplateLiteral(["<a href=\"", "\" class=\"ui-selector-footer-link\">", "</a>"]);
-
-	  _templateObject5 = function _templateObject5() {
-	    return data;
-	  };
-
-	  return data;
-	}
-
-	function _templateObject4() {
-	  var data = babelHelpers.taggedTemplateLiteral([""]);
-
-	  _templateObject4 = function _templateObject4() {
-	    return data;
-	  };
-
-	  return data;
-	}
-
-	function _templateObject3() {
-	  var data = babelHelpers.taggedTemplateLiteral(["<span class=\"ui-selector-footer-conjunction\">", "</span>"]);
-
-	  _templateObject3 = function _templateObject3() {
-	    return data;
-	  };
-
-	  return data;
-	}
-
-	function _templateObject2() {
-	  var data = babelHelpers.taggedTemplateLiteral([""]);
-
-	  _templateObject2 = function _templateObject2() {
-	    return data;
-	  };
-
-	  return data;
-	}
-
-	function _templateObject() {
-	  var data = babelHelpers.taggedTemplateLiteral(["<a href=\"", "\" class=\"ui-selector-footer-link ui-selector-footer-link-add\">", "</a>"]);
-
-	  _templateObject = function _templateObject() {
-	    return data;
-	  };
-
-	  return data;
-	}
+	function _checkPrivateRedeclaration(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
 
 	function _classPrivateMethodGet(receiver, privateSet, fn) { if (!privateSet.has(receiver)) { throw new TypeError("attempted to get private field on non-instance"); } return fn; }
 
-	var _dialog = new WeakMap();
+	var _dialog = /*#__PURE__*/new WeakMap();
 
-	var _node = new WeakMap();
+	var _node = /*#__PURE__*/new WeakMap();
 
-	var _input = new WeakMap();
+	var _input = /*#__PURE__*/new WeakMap();
 
-	var _urlLandingAdd = new WeakMap();
+	var _urlLandingAdd = /*#__PURE__*/new WeakMap();
 
-	var _urlFolderAdd = new WeakMap();
+	var _urlFolderAdd = /*#__PURE__*/new WeakMap();
 
-	var _siteType = new WeakMap();
+	var _urlFormAdd = /*#__PURE__*/new WeakMap();
 
-	var _siteId = new WeakMap();
+	var _siteType = /*#__PURE__*/new WeakMap();
 
-	var _items = new WeakMap();
+	var _siteId = /*#__PURE__*/new WeakMap();
 
-	var _onSelect = new WeakMap();
+	var _items = /*#__PURE__*/new WeakMap();
 
-	var _selectorContainer = new WeakMap();
+	var _onSelect = /*#__PURE__*/new WeakMap();
 
-	var _overlayElement = new WeakMap();
+	var _selectorContainer = /*#__PURE__*/new WeakMap();
 
-	var _overlayShown = new WeakMap();
+	var _overlayElement = /*#__PURE__*/new WeakMap();
 
-	var _getDialog = new WeakSet();
+	var _overlayShown = /*#__PURE__*/new WeakMap();
 
-	var _handleSearchClick = new WeakSet();
+	var _getDialog = /*#__PURE__*/new WeakSet();
 
-	var _showSelector = new WeakSet();
+	var _handleSearchClick = /*#__PURE__*/new WeakSet();
 
-	var _hideSelector = new WeakSet();
+	var _showSelector = /*#__PURE__*/new WeakSet();
 
-	var _showOverlay = new WeakSet();
+	var _hideSelector = /*#__PURE__*/new WeakSet();
 
-	var _onSearch = new WeakSet();
+	var _showOverlay = /*#__PURE__*/new WeakSet();
+
+	var _onSearch = /*#__PURE__*/new WeakSet();
 
 	var Selector = /*#__PURE__*/function () {
 	  function Selector(options) {
 	    babelHelpers.classCallCheck(this, Selector);
 
-	    _onSearch.add(this);
+	    _classPrivateMethodInitSpec(this, _onSearch);
 
-	    _showOverlay.add(this);
+	    _classPrivateMethodInitSpec(this, _showOverlay);
 
-	    _hideSelector.add(this);
+	    _classPrivateMethodInitSpec(this, _hideSelector);
 
-	    _showSelector.add(this);
+	    _classPrivateMethodInitSpec(this, _showSelector);
 
-	    _handleSearchClick.add(this);
+	    _classPrivateMethodInitSpec(this, _handleSearchClick);
 
-	    _getDialog.add(this);
+	    _classPrivateMethodInitSpec(this, _getDialog);
 
-	    _dialog.set(this, {
+	    _classPrivateFieldInitSpec(this, _dialog, {
 	      writable: true,
 	      value: null
 	    });
 
-	    _node.set(this, {
+	    _classPrivateFieldInitSpec(this, _node, {
 	      writable: true,
 	      value: void 0
 	    });
 
-	    _input.set(this, {
+	    _classPrivateFieldInitSpec(this, _input, {
 	      writable: true,
 	      value: void 0
 	    });
 
-	    _urlLandingAdd.set(this, {
+	    _classPrivateFieldInitSpec(this, _urlLandingAdd, {
 	      writable: true,
 	      value: void 0
 	    });
 
-	    _urlFolderAdd.set(this, {
+	    _classPrivateFieldInitSpec(this, _urlFolderAdd, {
 	      writable: true,
 	      value: void 0
 	    });
 
-	    _siteType.set(this, {
+	    _classPrivateFieldInitSpec(this, _urlFormAdd, {
 	      writable: true,
 	      value: void 0
 	    });
 
-	    _siteId.set(this, {
+	    _classPrivateFieldInitSpec(this, _siteType, {
 	      writable: true,
 	      value: void 0
 	    });
 
-	    _items.set(this, {
+	    _classPrivateFieldInitSpec(this, _siteId, {
 	      writable: true,
 	      value: void 0
 	    });
 
-	    _onSelect.set(this, {
+	    _classPrivateFieldInitSpec(this, _items, {
 	      writable: true,
 	      value: void 0
 	    });
 
-	    _selectorContainer.set(this, {
+	    _classPrivateFieldInitSpec(this, _onSelect, {
 	      writable: true,
 	      value: void 0
 	    });
 
-	    _overlayElement.set(this, {
+	    _classPrivateFieldInitSpec(this, _selectorContainer, {
 	      writable: true,
 	      value: void 0
 	    });
 
-	    _overlayShown.set(this, {
+	    _classPrivateFieldInitSpec(this, _overlayElement, {
+	      writable: true,
+	      value: void 0
+	    });
+
+	    _classPrivateFieldInitSpec(this, _overlayShown, {
 	      writable: true,
 	      value: void 0
 	    });
@@ -181,6 +136,7 @@ this.BX.Landing = this.BX.Landing || {};
 	    babelHelpers.classPrivateFieldSet(this, _input, options.input);
 	    babelHelpers.classPrivateFieldSet(this, _urlLandingAdd, options.urlLandingAdd || null);
 	    babelHelpers.classPrivateFieldSet(this, _urlFolderAdd, options.urlFolderAdd || null);
+	    babelHelpers.classPrivateFieldSet(this, _urlFormAdd, options.urlFormAdd || null);
 	    babelHelpers.classPrivateFieldSet(this, _siteType, options.siteType);
 	    babelHelpers.classPrivateFieldSet(this, _siteId, options.siteId);
 	    this.folderId = options.folderId;
@@ -209,7 +165,7 @@ this.BX.Landing = this.BX.Landing || {};
 	  return Selector;
 	}();
 
-	var _getDialog2 = function _getDialog2() {
+	function _getDialog2() {
 	  if (!babelHelpers.classPrivateFieldGet(this, _dialog)) {
 	    babelHelpers.classPrivateFieldSet(this, _dialog, new ui_entitySelector.Dialog({
 	      targetNode: babelHelpers.classPrivateFieldGet(this, _node),
@@ -235,26 +191,26 @@ this.BX.Landing = this.BX.Landing || {};
 	        'onHide': _classPrivateMethodGet(this, _hideSelector, _hideSelector2).bind(this),
 	        'Item:onSelect': babelHelpers.classPrivateFieldGet(this, _onSelect)
 	      },
-	      footer: [babelHelpers.classPrivateFieldGet(this, _urlLandingAdd) ? main_core.Tag.render(_templateObject(), babelHelpers.classPrivateFieldGet(this, _urlLandingAdd), main_core.Loc.getMessage('LANDING_SELECTOR_ADD_PAGE')) : main_core.Tag.render(_templateObject2()), babelHelpers.classPrivateFieldGet(this, _urlLandingAdd) ? main_core.Tag.render(_templateObject3(), main_core.Loc.getMessage('LANDING_SELECTOR_ADD_OR')) : main_core.Tag.render(_templateObject4()), babelHelpers.classPrivateFieldGet(this, _urlFolderAdd) ? main_core.Tag.render(_templateObject5(), babelHelpers.classPrivateFieldGet(this, _urlFolderAdd), main_core.Loc.getMessage('LANDING_SELECTOR_ADD_FOLDER')) : main_core.Tag.render(_templateObject6())]
+	      footer: [babelHelpers.classPrivateFieldGet(this, _urlLandingAdd) ? main_core.Tag.render(_templateObject || (_templateObject = babelHelpers.taggedTemplateLiteral(["<a href=\"", "\" class=\"ui-selector-footer-link ui-selector-footer-link-add\">", "</a>"])), babelHelpers.classPrivateFieldGet(this, _urlLandingAdd), main_core.Loc.getMessage('LANDING_SELECTOR_ADD_PAGE')) : main_core.Tag.render(_templateObject2 || (_templateObject2 = babelHelpers.taggedTemplateLiteral([""]))), babelHelpers.classPrivateFieldGet(this, _urlLandingAdd) ? main_core.Tag.render(_templateObject3 || (_templateObject3 = babelHelpers.taggedTemplateLiteral(["<span class=\"ui-selector-footer-conjunction\">", "</span>"])), main_core.Loc.getMessage('LANDING_SELECTOR_ADD_OR')) : main_core.Tag.render(_templateObject4 || (_templateObject4 = babelHelpers.taggedTemplateLiteral([""]))), babelHelpers.classPrivateFieldGet(this, _urlFolderAdd) ? main_core.Tag.render(_templateObject5 || (_templateObject5 = babelHelpers.taggedTemplateLiteral(["<a href=\"", "\" class=\"ui-selector-footer-link\">", "</a>"])), babelHelpers.classPrivateFieldGet(this, _urlFolderAdd), main_core.Loc.getMessage('LANDING_SELECTOR_ADD_FOLDER')) : main_core.Tag.render(_templateObject6 || (_templateObject6 = babelHelpers.taggedTemplateLiteral([""]))), babelHelpers.classPrivateFieldGet(this, _urlFormAdd) ? main_core.Tag.render(_templateObject7 || (_templateObject7 = babelHelpers.taggedTemplateLiteral(["<a href=\"", "\" class=\"ui-selector-footer-link ui-selector-footer-link-add\">", "</a>"])), babelHelpers.classPrivateFieldGet(this, _urlFormAdd), main_core.Loc.getMessage('LANDING_SELECTOR_ADD_FORM')) : main_core.Tag.render(_templateObject8 || (_templateObject8 = babelHelpers.taggedTemplateLiteral([""])))]
 	    }));
 	  }
 
 	  return babelHelpers.classPrivateFieldGet(this, _dialog);
-	};
+	}
 
-	var _handleSearchClick2 = function _handleSearchClick2() {
+	function _handleSearchClick2() {
 	  _classPrivateMethodGet(this, _showSelector, _showSelector2).call(this);
-	};
+	}
 
-	var _showSelector2 = function _showSelector2() {
+	function _showSelector2() {
 	  _classPrivateMethodGet(this, _getDialog, _getDialog2).call(this).show();
 
 	  _classPrivateMethodGet(this, _showOverlay, _showOverlay2).call(this);
 
 	  BX.addClass(babelHelpers.classPrivateFieldGet(this, _node), 'landing-selector-active');
-	};
+	}
 
-	var _hideSelector2 = function _hideSelector2() {
+	function _hideSelector2() {
 	  var _this = this;
 
 	  if (babelHelpers.classPrivateFieldGet(this, _overlayShown) === true) {
@@ -267,9 +223,9 @@ this.BX.Landing = this.BX.Landing || {};
 	  }
 
 	  BX.removeClass(babelHelpers.classPrivateFieldGet(this, _node), 'landing-selector-active');
-	};
+	}
 
-	var _showOverlay2 = function _showOverlay2() {
+	function _showOverlay2() {
 	  if (!babelHelpers.classPrivateFieldGet(this, _overlayElement)) {
 	    babelHelpers.classPrivateFieldSet(this, _overlayElement, BX.create('div', {
 	      props: {
@@ -282,14 +238,14 @@ this.BX.Landing = this.BX.Landing || {};
 	    document.querySelector('.landing-ui-panel.landing-ui-panel-top').appendChild(babelHelpers.classPrivateFieldGet(this, _overlayElement));
 	    babelHelpers.classPrivateFieldSet(this, _overlayShown, true);
 	  }
-	};
+	}
 
-	var _onSearch2 = function _onSearch2(event) {
+	function _onSearch2(event) {
 	  if (babelHelpers.classPrivateFieldGet(this, _dialog)) {
 	    babelHelpers.classPrivateFieldGet(this, _dialog).show();
 	    babelHelpers.classPrivateFieldGet(this, _dialog).search(event.srcElement.value);
 	  }
-	};
+	}
 
 	exports.Selector = Selector;
 

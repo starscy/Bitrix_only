@@ -122,15 +122,24 @@
 
 			if (key === 90 && (window.navigator.userAgent.match(/win/i) ? event.ctrlKey : event.metaKey))
 			{
-				if (event.shiftKey)
+				var rootWindow = BX.Landing.PageObject.getRootWindow();
+				var formSettingsPanel = rootWindow.BX.Reflection.getClass('BX.Landing.UI.Panel.FormSettingsPanel');
+
+				if (
+					!formSettingsPanel
+					|| !formSettingsPanel.getInstance().isShown()
+				)
 				{
-					event.preventDefault();
-					this.onRedo();
-				}
-				else
-				{
-					event.preventDefault();
-					this.onUndo();
+					if (event.shiftKey)
+					{
+						event.preventDefault();
+						this.onRedo();
+					}
+					else
+					{
+						event.preventDefault();
+						this.onUndo();
+					}
 				}
 			}
 		},
@@ -276,9 +285,15 @@
 				this.iframeWrapper.style.width = null;
 			}.bind(this));
 
+			document.body.setAttribute("data-device", "desktop");
+			BX.Landing.Main.getInstance().setDeviceCode("desktop");
+
 			this.iframeWrapper.dataset.postfix = "";
 			BX.Landing.Main.getInstance().enableControls();
 			BX.Landing.Main.getInstance().setNoTouchDevice();
+			BX.Landing.Main.getInstance().makeControlsInternal();
+			BX.Landing.UI.Panel.StylePanel.getInstance().hide();
+			BX.onCustomEvent("BX.Landing.Main:editorSizeChange", ["desktop"]);
 		},
 
 
@@ -295,9 +310,15 @@
 				this.iframeWrapper.style.width = "990px";
 			}.bind(this));
 
+			document.body.setAttribute("data-device", "tablet");
+			BX.Landing.Main.getInstance().setDeviceCode("tablet");
+
 			this.iframeWrapper.dataset.postfix = "--md";
-			BX.Landing.Main.getInstance().disableControls();
+			//BX.Landing.Main.getInstance().disableControls();
 			BX.Landing.Main.getInstance().setTouchDevice();
+			BX.Landing.Main.getInstance().makeControlsInternal();
+			BX.Landing.UI.Panel.StylePanel.getInstance().hide();
+			BX.onCustomEvent("BX.Landing.Main:editorSizeChange", ["tablet"]);
 		},
 
 
@@ -314,9 +335,15 @@
 				this.iframeWrapper.style.width = "375px";
 			}.bind(this));
 
+			document.body.setAttribute("data-device", "mobile");
+			BX.Landing.Main.getInstance().setDeviceCode("mobile");
+
 			this.iframeWrapper.dataset.postfix = "--md";
-			BX.Landing.Main.getInstance().disableControls();
+			//BX.Landing.Main.getInstance().disableControls();
 			BX.Landing.Main.getInstance().setTouchDevice();
+			BX.Landing.Main.getInstance().makeControlsExternal();
+			BX.Landing.UI.Panel.StylePanel.getInstance().hide();
+			BX.onCustomEvent("BX.Landing.Main:editorSizeChange", ["mobile"]);
 		},
 
 

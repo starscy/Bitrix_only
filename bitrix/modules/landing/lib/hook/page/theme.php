@@ -106,6 +106,9 @@ class Theme extends Page
 				'main' => '#a7a7a7',
 				'base' => true,
 			],
+			'twentyFourth' => [
+				'color' => '#AD8F47',
+			],
 			'travel' => [
 				'color' => '#ee4136',
 				'main' => '#333333',
@@ -157,11 +160,15 @@ class Theme extends Page
 				'main' => '#444444',
 				'colorTitle' => '#222222',
 			],
+			'twentyThird' => [
+				'color' => '#A861AB',
+			],
 			'photography' => [
 				'color' => '#333333',
 				'main' => '#444444',
 				'colorTitle' => '#333333',
 				'base' => true,
+				'baseInSettings' => false,
 			],
 		];
 
@@ -392,6 +399,10 @@ class Theme extends Page
 			}
 		}
 
+		if (!is_string($colorHex))
+		{
+			$colorHex = '';
+		}
 		$colorHex = self::prepareColor($colorHex);
 
 		$restrictionCode = Restriction\Hook::getRestrictionCodeByHookCode('THEME');
@@ -413,12 +424,12 @@ class Theme extends Page
 			|| ($themeCode = self::getThemeCodeByColor($colorHex))
 		)
 		{
-			$colorMain = $defaultColors[$themeCode]['main'];
-			if ($defaultColors[$themeCode]['secondary'])
+			$colorMain = $defaultColors[$themeCode]['main'] ?? null;
+			if ($defaultColors[$themeCode]['secondary'] ?? null)
 			{
 				$colorSecondary = $defaultColors[$themeCode]['secondary'];
 			}
-			if ($defaultColors[$themeCode]['colorTitle'])
+			if ($defaultColors[$themeCode]['colorTitle'] ?? null)
 			{
 				$colorTitle = $defaultColors[$themeCode]['colorTitle'];
 			}

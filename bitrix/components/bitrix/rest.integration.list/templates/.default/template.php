@@ -9,7 +9,14 @@ use Bitrix\Main\Web\Json;
 use Bitrix\Main\Localization\Loc;
 Loc::loadMessages(__FILE__);
 
-if ($arParams['SHOW_MENU'] == 'Y' && isset($_REQUEST['IFRAME']) && $_REQUEST['IFRAME'] === 'Y')
+\Bitrix\Main\UI\Extension::load('ui.design-tokens');
+
+if (
+	isset ($arParams['SHOW_MENU'])
+	&& $arParams['SHOW_MENU'] == 'Y'
+	&& isset($_REQUEST['IFRAME'])
+	&& $_REQUEST['IFRAME'] === 'Y'
+)
 {
 	$this->setViewTarget('above_pagetitle');
 	$APPLICATION->IncludeComponent(

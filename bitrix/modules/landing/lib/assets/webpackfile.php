@@ -2,12 +2,14 @@
 
 namespace Bitrix\Landing\Assets;
 
+use Bitrix\Landing\Agent;
 use Bitrix\Landing\File;
 use Bitrix\Landing\Site;
 use Bitrix\Landing\Manager;
 use Bitrix\Main;
 use Bitrix\Main\FileTable;
 use Bitrix\Main\Security\Random;
+use Bitrix\Main\Web\HttpClient;
 use Bitrix\Main\Web\WebPacker;
 
 class WebpackFile
@@ -52,6 +54,11 @@ class WebpackFile
 	 * @var string
 	 */
 	protected $packageHash;
+
+	/**
+	 * For browser cache
+	 */
+	protected static int $cacheTtl = 86400; // one day
 
 	/**
 	 * WebpackFile constructor.
@@ -128,6 +135,9 @@ class WebpackFile
 			{
 				$this->fileId = $res->getId();
 				File::addToAsset($this->landingId, $this->fileId);
+
+				// tmp fixing agent for 149117
+				Agent::addUniqueAgent('checkFileExists', [$this->fileId], 86400, 60);
 			}
 		}
 	}
@@ -137,7 +147,6 @@ class WebpackFile
 	 */
 	protected function configureFile(): void
 	{
-		// todo: js cache lifetime
 		if ($fileId = $this->findExistFile())
 		{
 			$this->fileId = $fileId;
@@ -214,7 +223,10 @@ class WebpackFile
 	 */
 	public function getOutput(): string
 	{
-		return $this->fileController->getLoader()->getString();
+		return $this->fileController
+			->getLoader()
+			->setCacheTtl(self::$cacheTtl)
+			->getString();
 	}
 
 	/**

@@ -9,6 +9,10 @@ Loc::loadMessages(__FILE__);
 
 class FileInput
 {
+	public const UPLOAD_IMAGES = 'I';
+	public const UPLOAD_EXTENTION_LIST = 'F';
+	public const UPLOAD_ANY_FILES = 'A';
+
 	protected $elementSetts = array(
 		"name" => "FILE[n#IND#]",
 		"description" => true,
@@ -221,22 +225,46 @@ HTML
 		$this->uploadSetts = array(
 			"upload" => '',
 			"uploadType" => "path",
-			"medialib" => ($inputs['medialib'] === true && \COption::GetOptionString('fileman', "use_medialib", "Y") != "N"),
-			"fileDialog" => ($inputs['file_dialog'] === true || $inputs['fileDialog'] === true),
-			"cloud" => ($inputs['cloud'] === true && $USER->CanDoOperation("clouds_browse") && \CModule::IncludeModule("clouds") && \CCloudStorage::HasActiveBuckets()),
-			"maxCount" => ($params["maxCount"] > 0 ? $params["maxCount"] : 0),
-			"maxSize" => ($params["maxSize"] > 0 ? $params["maxSize"] : 0),
-			"allowUpload" => (in_array($params["allowUpload"], array("A", "I", "F")) ? $params["allowUpload"] : "A"),
-			"allowUploadExt" => trim($params["allowUploadExt"]),
-			"allowSort" => ($params["allowSort"] == "N" ? "N" : "Y")
+			"medialib" =>
+				isset($inputs['medialib'])
+				&& $inputs['medialib'] === true
+				&& \COption::GetOptionString('fileman', "use_medialib", "Y") != "N"
+			,
+			"fileDialog" =>
+				(isset($inputs['file_dialog']) && $inputs['file_dialog'] === true)
+				|| (isset($inputs['fileDialog']) && $inputs['fileDialog'] === true)
+			,
+			"cloud" =>
+				isset($inputs['cloud'])
+				&& $inputs['cloud'] === true
+				&& $USER->CanDoOperation("clouds_browse")
+				&& \CModule::IncludeModule("clouds")
+				&& \CCloudStorage::HasActiveBuckets()
+			,
+			"maxCount" => isset($params["maxCount"]) && $params["maxCount"] > 0 ? $params["maxCount"] : 0,
+			"maxSize" => isset($params["maxSize"]) && $params["maxSize"] > 0 ? $params["maxSize"] : 0,
+			"allowUpload" => $params["allowUpload"] ?? self::UPLOAD_ANY_FILES,
+			"allowUploadExt" => trim($params["allowUploadExt"] ?? ''),
+			"allowSort" => isset($params["allowSort"]) && $params["allowSort"] === "N" ? "N" : "Y",
 		);
+		if (!in_array(
+			$this->uploadSetts["allowUpload"],
+			[
+				self::UPLOAD_ANY_FILES,
+				self::UPLOAD_IMAGES,
+				self::UPLOAD_EXTENTION_LIST,
+			]
+		))
+		{
+			$this->uploadSetts["allowUpload"] = self::UPLOAD_ANY_FILES;
+		}
 		if ($this->uploadSetts["medialib"] === true)
 			$this->uploadSetts["medialib"] = (\Bitrix\Main\Loader::includeModule("fileman") && \CMedialib::CanDoOperation('medialib_view_collection', 0));
 		if($this->uploadSetts["fileDialog"] === true && !$USER->CanDoOperation('fileman_view_file_structure'))
 			$this->uploadSetts["fileDialog"] = false;
 
-		if (empty($this->uploadSetts["allowUploadExt"]) && $this->uploadSetts["allowUpload"] == "F")
-			$this->uploadSetts["allowUpload"] = "A";
+		if (empty($this->uploadSetts["allowUploadExt"]) && $this->uploadSetts["allowUpload"] === self::UPLOAD_EXTENTION_LIST)
+			$this->uploadSetts["allowUpload"] = self::UPLOAD_ANY_FILES;
 		if (isset($this->elementSetts["id"]))
 			$this->id = 'bx_file_'.mb_strtolower(preg_replace("/[^a-z0-9]/i", "_", $this->elementSetts["id"]));
 		else
@@ -274,8 +302,10 @@ HTML
 		\CJSCore::Init(array('fileinput'));
 
 		$files = '';
-		if (!is_array($values) || is_array($values) && array_key_exists("tmp_name", $values))
+		if (!is_array($values) || array_key_exists("tmp_name", $values))
+		{
 			$values = array($this->elementSetts["name"] => $values);
+		}
 		$maxIndex = 0;
 		$pattMaxIndex = mb_strpos($this->elementSetts["name"], "#IND#") > 0 ? str_replace("#IND#", "(\\d+)", preg_quote($this->elementSetts["name"])) : null;
 		foreach($values as $inputName => $fileId)
@@ -322,9 +352,9 @@ HTML
 
 		if ($this->uploadSetts["maxCount"] == 1)
 		{
-			if ($this->uploadSetts["allowUpload"] == "I")
+			if ($this->uploadSetts["allowUpload"] === self::UPLOAD_IMAGES)
 				$hintMessage = Loc::getMessage("BXU_DNDMessage01");
-			else if ($this->uploadSetts["allowUpload"] == "F")
+			else if ($this->uploadSetts["allowUpload"] === self::UPLOAD_EXTENTION_LIST)
 				$hintMessage = Loc::getMessage("BXU_DNDMessage02", array("#ext#" => htmlspecialcharsbx($this->uploadSetts["allowUploadExt"])));
 			else
 				$hintMessage = Loc::getMessage("BXU_DNDMessage03");
@@ -335,9 +365,9 @@ HTML
 		else
 		{
 			$maxCount = ($this->uploadSetts["maxCount"] > 0 ? GetMessage("BXU_DNDMessage5", array("#maxCount#" => htmlspecialcharsbx($this->uploadSetts["maxCount"]))) : "");
-			if ($this->uploadSetts["allowUpload"] == "I")
+			if ($this->uploadSetts["allowUpload"] === self::UPLOAD_IMAGES)
 				$hintMessage = Loc::getMessage("BXU_DNDMessage1", array("#maxCount#" => $maxCount));
-			else if ($this->uploadSetts["allowUpload"] == "F")
+			else if ($this->uploadSetts["allowUpload"] == self::UPLOAD_EXTENTION_LIST)
 				$hintMessage = Loc::getMessage("BXU_DNDMessage2", array("#ext#" => htmlspecialcharsbx($this->uploadSetts["allowUploadExt"]), "#maxCount#" => $maxCount));
 			else
 				$hintMessage = Loc::getMessage("BXU_DNDMessage3", array("#maxCount#" => $maxCount));
@@ -364,7 +394,7 @@ HTML
 			"nonPreview" => GetMessage("BXU_NonPreview")
 		);
 
-		$settings["modePin"] = ($settings["pinDescription"] == "Y" && $this->elementSetts["description"] ? "mode-with-description" : "");
+		$settings["modePin"] = (isset($settings["pinDescription"]) && $settings["pinDescription"] == "Y" && $this->elementSetts["description"] ? "mode-with-description" : "");
 		$t = <<<HTML
 <div class="adm-fileinput-wrapper {$classSingle}">
 <div class="adm-fileinput-btn-panel">
@@ -455,7 +485,7 @@ HTML;
 	}
 	private function getFile($fileId = "", $inputName = "file", $getDataFromRequest = false)
 	{
-		$result = NULL;
+		$result = null;
 		$properties = array();
 		if (is_array($fileId) && array_key_exists("ID", $fileId))
 		{
