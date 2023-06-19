@@ -6,11 +6,10 @@ $APPLICATION->SetTitle("taxi");
 <?php
 
 $APPLICATION->IncludeComponent(
-	"myComponents:getFreeCar",
+	"MyComponents:getFreeCar",
 	".default",
 	[
 		"IBLOCK_ID" => "9",
-
 
 	]);
 ?>
